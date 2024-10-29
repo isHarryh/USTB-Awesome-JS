@@ -48,8 +48,8 @@
     });
 
     class FillInHelper {
-        static apply(test_txt) {
-            FillInHelper.showAnswer(test_txt);
+        static apply(txt) {
+            FillInHelper.showAnswer(txt);
         }
 
         static showAnswer(txt) {
@@ -63,7 +63,7 @@
                 </div>
             `);
             const answerStr = FillInHelper.generatePossibleAnswer(txt);
-            console.log("Raw text: " + text_txt + "\n" + "Answer string: " + answerStr);
+            console.log("Raw text: " + txt + "\n" + "Answer string: " + answerStr);
             box.find('pre').append(answerStr);
             $('#exercise_submit').append(box);
         }
