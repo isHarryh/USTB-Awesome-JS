@@ -8,7 +8,7 @@
 // @run-at       document-body
 // @grant        GM_addStyle
 // @grant        GM_getResourceURL
-// @require      https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js
+// @require      https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js
 // ==/UserScript==
 
 (function() {
@@ -64,6 +64,14 @@
         .ztree {
             width: inherit !important;
             height: inherit !important;
+        }
+        .exercise_date {
+            color: #888;
+            padding: 5px 0;
+        }
+        #lh-rel-time {
+            color: #44c;
+            padding: 0 5px;
         }
         .btn {
             transition: translate 0.2s !important;
@@ -166,6 +174,93 @@
         }
     }
 
+    class DateTimeHelper {
+        static toRelTime(dateString) {
+            const SECOND = 1,
+                  MINUTE = 60 * SECOND,
+                  HOUR = 60 * MINUTE,
+                  DAY = 24 * HOUR,
+                  WEEK = 7 * DAY,
+                  LONG_TIME = 10 * WEEK;
+
+            const diffSec = Math.round((new Date(`${dateString} 23:59:59`) - new Date()) / 1000);
+            const diffSecAbs = Math.abs(diffSec);
+            const isLater = diffSec > 0;
+            const suffix = isLater ? '后' : '前';
+
+            if (diffSecAbs < MINUTE) {
+                return isLater ? '刚刚' : "现在";
+            } else if (diffSecAbs < HOUR) {
+                const m = Math.floor(diffSecAbs / MINUTE);
+                return `${m}分${suffix}`;
+            } else if (diffSecAbs < DAY) {
+                const h = Math.floor(diffSecAbs / HOUR);
+                const m = Math.floor((diffSecAbs % HOUR) / MINUTE);
+                return `${h}小时${m > 0 ? m + '分' : ''}${suffix}`;
+            } else if (diffSecAbs < WEEK) {
+                const d = Math.floor(diffSecAbs / DAY);
+                const h = Math.floor((diffSecAbs % DAY) / HOUR);
+                return `${d}天${h > 0 ? h + '小时' : ''}${suffix}`;
+            } else if (diffSecAbs < LONG_TIME) {
+                const w = Math.floor(diffSecAbs / WEEK);
+                const d = Math.floor((diffSecAbs % WEEK) / DAY);
+                return `${w}周${d > 0 ? d + '天' : ''}${suffix}`;
+            } else {
+                return `'很久以${suffix}`;
+            }
+        }
+
+        static showRelTimeOnArticle() {
+            const title = $('#nodeTitle');
+            const display = $('#done_time').find('.exercise_date');
+            const displayInner = $('#lh-rel-time');
+            if (title !== null && display !== null) {
+                const nodeData = QuestionTree.getNodeFromName(title.text());
+                if (nodeData !== null && nodeData.type === 'exercise') {
+                    let text = "";
+                    if (nodeData.time_open) {
+                        text += `${DateTimeHelper.toRelTime(nodeData.time_open)}开始`;
+                    }
+                    if (nodeData.time_close) {
+                        if (nodeData.time_open) {
+                            text += "，";
+                        }
+                        text += `${DateTimeHelper.toRelTime(nodeData.time_close)}截止`;
+                    }
+
+                    const displayInnerNew = $(`<span id="lh-rel-time" style="display:none">${text}</span>`);
+                    if (displayInner.text() !== displayInnerNew.text() || displayInner === null) {
+                        if (displayInner !== null) {
+                            displayInner.remove();
+                        }
+                        display.append(displayInnerNew);
+                        displayInnerNew.fadeIn();
+                    }
+                }
+            }
+        }
+    }
+
+    class QuestionTree {
+        static nodes = {}
+
+        static updateNodes(newNodes) {
+            newNodes.forEach((e) => {
+                QuestionTree.nodes[`${e.name}`] = ({
+                    name: e.name,
+                    type: e.type,
+                    section: e.section_id,
+                    time_open: e.start_time,
+                    time_close: e.done_time
+                })
+            });
+        }
+
+        static getNodeFromName(name) {
+            return QuestionTree.nodes[name] || null;
+        }
+    }
+
     class XHRSpy {
         static listeners = [];
         static originalSend = XMLHttpRequest.prototype.send;
@@ -201,5 +296,12 @@
     XHRSpy.add('/studentExercise/ajaxSubmitFill', (data, url) => {
         FillInHelper.apply(data.test_txt);
     });
+
+    // Listen on nodes updates
+    XHRSpy.add('/studentExercise/ajaxGetNodes', (data, url) => {
+        QuestionTree.updateNodes(data);
+    });
+
+    setInterval(DateTimeHelper.showRelTimeOnArticle, 1000);
 
 })();
