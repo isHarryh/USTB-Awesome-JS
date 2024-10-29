@@ -17,11 +17,42 @@
     // Optimize webpage style
     GM_addStyle(`
         /* USTH RG Helper */
+        /* Header */
+        .c_pic img {
+            width: unset !important;
+        }
+        .container_header {
+            height: 50px !important;
+        }
+        .logo {
+            padding-top: 0 !important;
+        }
+        .nav {
+            left: 250px !important;
+            top: 5px !important;
+        }
+        .nav li a {
+            height: 35px !important;
+            padding-top: 10px !important;
+        }
+        /* Footer */
         #outter {
             padding: 0 !important;
         }
         .buttom {
             position: unset !important;
+        }
+        /* Content */
+        pre {
+            background: #fff6 !important;
+            font-family: consolas, monaco !important;
+            margin: 5px 0 !important;
+            padding: 10px !important;
+        }
+        .article, .article1, .article2, .article3 {
+            border-radius: 10px !important;
+            margin: 5px 0 !important;
+            padding: 10px !important;
         }
         #exercise_submit {
             display: grid !important;
@@ -33,6 +64,15 @@
         .ztree {
             width: inherit !important;
             height: inherit !important;
+        }
+        .btn {
+            transition: translate 0.2s !important;
+        }
+        .btn:hover {
+            translate: 0 -2.5px !important;
+        }
+        .mgt15, .mgt20, .mgt30 {
+            margin-top: 12.5px !important;
         }
     `);
 
