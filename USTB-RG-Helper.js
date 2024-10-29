@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         USTB RG Helper
 // @namespace    http://ucb.ustb.edu.cn/
-// @version      0.1
+// @version      0.2
 // @description  北京科技大学锐格实验平台辅助工具
 // @author       Harry Huang
 // @match        *://ucb.ustb.edu.cn/*
@@ -241,6 +241,56 @@
         }
     }
 
+    class QuestionLoad {
+        static load = {};
+
+        static updateLoad(newLoad) {
+            QuestionLoad.load = newLoad;
+        }
+
+        static showForceSubmit() {
+            const finalLoad = QuestionLoad.load;
+            if (finalLoad.currentEid !== null) {
+                const nodeData = QuestionTree.getNodeFromRealId(finalLoad.currentEid);
+                if (nodeData !== null) {
+                    const btn = $('#rghForceSubmit');
+                    const wrapper = $(`
+                        <div class="mgt10 bold" style="display:none">
+                            <div class="fl clearfix mgt20">
+                                <a submitbtn="1" class="f_button4 btn" id="rghForceSubmit">强制提交</a>
+                            </div>
+                        </div>`
+                    );
+                    const btnNew = wrapper.find('#rghForceSubmit');
+
+                    // Question type: 0=Selection, 1=FillIn, 2=Program
+                    switch (finalLoad.type) {
+                        case '0':
+                            btnNew.prop('href', `javascript:submitSel(${nodeData.realId},0,0,${nodeData.sectionId})`);
+                            break;
+                        case '1':
+                            btnNew.prop('href', `javascript:submitFill(${nodeData.realId},0,0,${nodeData.sectionId})`);
+                            break;
+                        case '2':
+                            btnNew.prop('onclick', `return setmyselflanguage();`);
+                            btnNew.prop('href', `javascript:submitPrg(${nodeData.realId},0,0,${nodeData.sectionId})`);
+                            break;
+                        default:
+                            return;
+                    }
+
+                    if (btn.prop('href') !== btnNew.prop('href') || btn === null) {
+                        if (btn !== null) {
+                            btn.remove();
+                        }
+                        $('#exercise_submit').append(wrapper);
+                        wrapper.fadeIn();
+                    }
+                }
+            }
+        }
+    }
+
     class QuestionTree {
         static nodes = {}
 
@@ -317,6 +367,14 @@
         QuestionTree.updateNodes(data);
     });
 
-    setInterval(DateTimeHelper.showRelTimeOnArticle, 1000);
+    // Listen on question loading responses
+    XHRSpy.add('/studentExercise/ajaxLoad', (data, url) => {
+        QuestionLoad.updateLoad(data);
+    });
+
+    setInterval(() => {
+        DateTimeHelper.showRelTimeOnArticle();
+        QuestionLoad.showForceSubmit();
+    }, 1000);
 
 })();
