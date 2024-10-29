@@ -69,7 +69,7 @@
             color: #888;
             padding: 5px 0;
         }
-        #lh-rel-time {
+        #rghRelTime {
             color: #44c;
             padding: 0 5px;
         }
@@ -213,22 +213,22 @@
         static showRelTimeOnArticle() {
             const title = $('#nodeTitle');
             const display = $('#done_time').find('.exercise_date');
-            const displayInner = $('#lh-rel-time');
+            const displayInner = $('#rghRelTime');
             if (title !== null && display !== null) {
                 const nodeData = QuestionTree.getNodeFromName(title.text());
                 if (nodeData !== null && nodeData.type === 'exercise') {
                     let text = "";
-                    if (nodeData.time_open) {
-                        text += `${DateTimeHelper.toRelTime(nodeData.time_open)}开始`;
+                    if (nodeData.timeOpen) {
+                        text += `${DateTimeHelper.toRelTime(nodeData.timeOpen)}开始`;
                     }
-                    if (nodeData.time_close) {
-                        if (nodeData.time_open) {
+                    if (nodeData.timeClose) {
+                        if (nodeData.timeOpen) {
                             text += "，";
                         }
-                        text += `${DateTimeHelper.toRelTime(nodeData.time_close)}截止`;
+                        text += `${DateTimeHelper.toRelTime(nodeData.timeClose)}截止`;
                     }
 
-                    const displayInnerNew = $(`<span id="lh-rel-time" style="display:none">${text}</span>`);
+                    const displayInnerNew = $(`<span id="rghRelTime" style="display:none">${text}</span>`);
                     if (displayInner.text() !== displayInnerNew.text() || displayInner === null) {
                         if (displayInner !== null) {
                             displayInner.remove();
@@ -246,18 +246,33 @@
 
         static updateNodes(newNodes) {
             newNodes.forEach((e) => {
-                QuestionTree.nodes[`${e.name}`] = ({
+                QuestionTree.nodes[e.realId] = ({
                     name: e.name,
                     type: e.type,
-                    section: e.section_id,
-                    time_open: e.start_time,
-                    time_close: e.done_time
+                    realId: e.realId,
+                    sectionId: e.section_id,
+                    timeOpen: e.start_time,
+                    timeClose: e.done_time
                 })
             });
         }
 
         static getNodeFromName(name) {
-            return QuestionTree.nodes[name] || null;
+            for (const [id, data] of Object.entries(this.nodes)) {
+                if (data.name == name) {
+                    return data;
+                }
+            }
+            return null;
+        }
+
+        static getNodeFromRealId(realId) {
+            for (const [id, data] of Object.entries(this.nodes)) {
+                if (data.realId == realId) {
+                    return data;
+                }
+            }
+            return null;
         }
     }
 
