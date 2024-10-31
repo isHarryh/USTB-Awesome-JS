@@ -4,10 +4,10 @@
 // @version      0.2
 // @description  北京科技大学锐格实验平台辅助工具
 // @author       Harry Huang
+// @license      MIT
 // @match        *://ucb.ustb.edu.cn/*
 // @run-at       document-body
 // @grant        GM_addStyle
-// @grant        GM_getResourceURL
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js
 // ==/UserScript==
 
@@ -40,7 +40,13 @@
             padding: 0 !important;
         }
         .buttom {
+            height: auto !important;
+            padding: 10px 0 !important;
             position: unset !important;
+        }
+        .buttom pre {
+            text-wrap: balance;
+            word-break: break-word;
         }
         /* Content */
         pre {
@@ -72,6 +78,20 @@
         #rghRelTime {
             color: #44c;
             padding: 0 5px;
+        }
+        .rg-log {
+            color: #fff;
+            margin: 5px;
+            text-align: center;
+        }
+        .rg-log-info {
+            color: #eee;
+        }
+        .rg-log-warn {
+            color: #dd0;
+        }
+        .rg-log-error {
+            color: #c00;
         }
         .btn {
             transition: translate 0.2s !important;
@@ -111,7 +131,7 @@
                 </div>
             `);
             const answerStr = FillInHelper.generatePossibleAnswer(txt);
-            console.log("Raw text: " + txt + "\n" + "Answer string: " + answerStr);
+            Logger.info("原始答案表达式：" + txt)
             box.find('pre').append(answerStr);
             $('#exercise_submit').append(box);
         }
@@ -246,6 +266,7 @@
 
         static updateLoad(newLoad) {
             QuestionLoad.load = newLoad;
+            Logger.info("题目详情加载完成（实际ID："+ newLoad.currentEid +"，类型：" + newLoad.type + "）");
         }
 
         static showForceSubmit() {
@@ -305,6 +326,7 @@
                     timeClose: e.done_time
                 })
             });
+            Logger.info("节点列表加载完成（节点数量：" + Object.entries(newNodes).length + "）");
         }
 
         static getNodeFromName(name) {
@@ -323,6 +345,27 @@
                 }
             }
             return null;
+        }
+    }
+
+    class Logger {
+        static title = "RGHelper";
+
+        static showStatusBar() {
+            if ($('#rgLogContent').length === 0) {
+                $('.buttom').empty();
+                $('.buttom').append(`
+                <p class="rg-log">
+                    <span class="bold">已启用 USTB RG Helper</span>
+                    <pre id="rgLogContent" class="rg-log-info"></pre>
+                </p>
+                `);
+            }
+        }
+
+        static info(msg) {
+            console.log("[" + Logger.title + "]", msg);
+            $('#rgLogContent').text(msg);
         }
     }
 
@@ -375,6 +418,7 @@
     setInterval(() => {
         DateTimeHelper.showRelTimeOnArticle();
         QuestionLoad.showForceSubmit();
+        Logger.showStatusBar();
     }, 1000);
 
 })();
