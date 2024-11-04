@@ -267,7 +267,22 @@
 
         static updateLoad(newLoad) {
             QuestionLoad.load = newLoad;
-            Logger.info("题目详情加载完成（实际ID："+ newLoad.currentEid +"，类型：" + newLoad.type + "）");
+            if (QuestionLoad.load) {
+                Logger.info("题目详情加载完成（实际ID："+ newLoad.currentEid +"，类型：" + newLoad.type + "）");
+            } else {
+                console.warn("Not parsed question load");
+            }
+        }
+
+        static updateAnswer(nodeData, content) {
+            QuestionLoad.answer = {
+                realId: nodeData.realId,
+                sectionId: nodeData.sectionId,
+                content: content
+            };
+            if (content) {
+                Logger.info(`参考答案获取完成（题目ID：${nodeData.realId}，章节ID：${nodeData.sectionId}）`);
+            }
         }
 
         static showForceSubmit() {
@@ -338,45 +353,29 @@
                         box.slideToggle();
                     });
 
-                    const finalRealId = nodeData.realId;
-                    const finalSectionId = nodeData.sectionId;
-
-                    if (nodeData.realId != QuestionLoad.answer.realId || nodeData.sectionId != QuestionLoad.answer.sectionId) {
+                    if (!QuestionLoad.isCurrentLoadNode(QuestionLoad.answer)) {
+                        const finalNodeData = JSON.parse(JSON.stringify(nodeData));
                         XHRSender.get(
-                            `http://ucb.ustb.edu.cn/studentHome/popup?type=key&id=${finalRealId}&c_a_r=1&section_id=${finalSectionId}&sign=0`,
+                            `http://ucb.ustb.edu.cn/studentHome/popup?type=key&id=${finalNodeData.realId}&c_a_r=1&section_id=${finalNodeData.sectionId}&sign=0`,
                             (data) => {
-                                const parsedData = $('<section>').append(data);
-                                QuestionLoad.answer = {
-                                    realId: finalRealId,
-                                    sectionId: finalSectionId,
-                                    data: parsedData,
-                                    content: null
-                                };
+                                if (!QuestionLoad.isCurrentLoadNode(finalNodeData)) {
+                                    console.log("Answer response fetched but node changed");
+                                    return;
+                                }
+                                const parsedHtml = $('<section>').append(data);
+                                QuestionLoad.updateAnswer(finalNodeData, null);
 
                                 let answerDiv;
-                                if ((answerDiv = parsedData.find('#div_box_2')).length) {
-                                    console.log(answerDiv);
-                                    QuestionLoad.answer = {
-                                        realId: finalRealId,
-                                        sectionId: finalSectionId,
-                                        data:parsedData,
-                                        content: answerDiv.html()
-                                    };
-                                    console.log(answerDiv.html());
-                                    Logger.info(`获取参考答案已完成（题目ID：${finalRealId}，章节ID：${finalSectionId}，类型：普通）`);
-                                } else if ((answerDiv = parsedData.find('#div_box_1')).length) {
-                                    const jsVarMatch = /var\s+init_obj\s*=\s*(.+);/g.exec(parsedData.html());
+                                if ((answerDiv = parsedHtml.find('#div_box_2')).length) {
+                                    const answerStr = answerDiv.html();
+                                    QuestionLoad.updateAnswer(finalNodeData, answerStr);
+                                } else if ((answerDiv = parsedHtml.find('#div_box_1')).length) {
+                                    const jsVarMatch = /var\s+init_obj\s*=\s*(.+);/g.exec(parsedHtml.html());
                                     if (jsVarMatch !== null) {
                                         const jsContentMatch = /['"]content['"]\s*:\s*['"](.+)['"]\s*,\s*['"]courseLang['"]\s*:/g.exec(jsVarMatch[1]);
                                         if (jsContentMatch !== null) {
-                                            QuestionLoad.answer = {
-                                                realId: finalRealId,
-                                                sectionId: finalSectionId,
-                                                data:parsedData,
-                                                content: QuestionLoad.decodeRawJSONString(jsContentMatch[1])
-                                            };
-                                            console.log(QuestionLoad.decodeRawJSONString(jsContentMatch[1]));
-                                            Logger.info(`获取参考答案已完成（题目ID：${finalRealId}，章节ID：${finalSectionId}，类型：脚本）`);
+                                            const answerStr = jsContentMatch[1];
+                                            QuestionLoad.updateAnswer(finalNodeData, QuestionLoad.decodeRawJSONString(answerStr));
                                         }
                                     }
                                 } else {
@@ -396,6 +395,11 @@
 
         static decodeRawJSONString(str) {
             return JSON.parse(`"${str.replaceAll('\"', '\\\"')}"`);
+        }
+
+        static isCurrentLoadNode(nodeData) {
+            const curNodeData = QuestionTree.getNodeFromRealId(QuestionLoad.load.currentEid);
+            return nodeData.realId == curNodeData.realId && nodeData.sectionId == curNodeData.sectionId;
         }
     }
 
