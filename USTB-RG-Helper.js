@@ -280,16 +280,22 @@
 
                             const parsedHtml = $('<section>').append(data);
                             let answerDiv;
+                            let answerStr;
                             if ((answerDiv = parsedHtml.find('#div_box_2')).length) {
-                                const answerStr = answerDiv.html();
+                                // Answer string in common div
+                                answerStr = answerDiv.html();
+                                answerStr = QuestionLoad.trimString(answerStr);
                                 QuestionLoad.updateAnswer(finalNodeData, answerStr);
                             } else if ((answerDiv = parsedHtml.find('#div_box_1')).length) {
+                                // Answer string in embedded script
                                 const jsVarMatch = /var\s+init_obj\s*=\s*(.+);/g.exec(parsedHtml.html());
                                 if (jsVarMatch !== null) {
                                     const jsContentMatch = /['"]content['"]\s*:\s*['"](.+)['"]\s*,\s*['"]courseLang['"]\s*:/g.exec(jsVarMatch[1]);
                                     if (jsContentMatch !== null) {
-                                        const answerStr = jsContentMatch[1];
-                                        QuestionLoad.updateAnswer(finalNodeData, QuestionLoad.decodeRawJSONString(answerStr));
+                                        answerStr = jsContentMatch[1];
+                                        answerStr = QuestionLoad.decodeRawJSONString(answerStr);
+                                        answerStr = QuestionLoad.trimString(answerStr);
+                                        QuestionLoad.updateAnswer(finalNodeData, answerStr);
                                     }
                                 }
                             } else {
@@ -304,6 +310,10 @@
                     );
                 }
             }
+        }
+
+        static trimString(str) {
+            return str.trim();
         }
 
         static decodeRawJSONString(str) {
@@ -436,6 +446,6 @@
         QuestionLoad.showForceSubmit();
         QuestionLoad.showForceAnswer();
         Logger.showStatusBar();
-    }, 1000);
+    }, 500);
 
 })();
