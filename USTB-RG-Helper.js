@@ -115,85 +115,6 @@
         `);
     });
 
-    class FillInHelper {
-        static apply(txt) {
-            FillInHelper.showAnswer(txt);
-        }
-
-        static showAnswer(txt) {
-            $('#feedbackBoxAlt').remove();
-            const box = $(`
-                <div id="feedbackBoxAlt">
-                    <div class="bold mgt30">可能的参考答案:</div>
-                    <div class="mgt10 article bluebg scroll">
-                        <pre></pre>
-                    </div>
-                </div>
-            `);
-            const answerStr = FillInHelper.generatePossibleAnswer(txt);
-            Logger.info("原始答案表达式：" + txt)
-            box.find('pre').append(answerStr);
-            $('#exercise_submit').append(box);
-        }
-
-        static generatePossibleAnswer(txt) {
-            const clozePattern = /\(\^(.+?)\$\)/g;
-            return txt.split(';;').map((line) => {
-                return line.split(';').map((part) => {
-                    let match;
-                    let result = '';
-                    while ((match = clozePattern.exec(part)) !== null) {
-                        result += FillInHelper.generateRegexCase(match[1]);
-                    }
-                    return result;
-                }).join(' ');
-            }).join('\n');
-        }
-
-        static generateRegexCase(regex) {
-            let result = '';
-            let prevChar = '';
-            for (let i = 0; i < regex.length; i++) {
-                let char = regex[i];
-                if (prevChar === '\\') {
-                    switch (char) {
-                        case 'd':
-                            prevChar = '0';
-                            break;
-                        case 'w':
-                            prevChar = 'a';
-                            break;
-                        case 's':
-                            prevChar = ' ';
-                            break;
-                        case '.':
-                            prevChar = '.';
-                            break;
-                        default:
-                            prevChar = char;
-                            break;
-                    }
-                } else {
-                    switch (char) {
-                        case '*':
-                            prevChar = '';
-                            break;
-                        case '+':
-                            result += prevChar;
-                            prevChar = char;
-                            break;
-                        default:
-                            result += prevChar;
-                            prevChar = char;
-                            break;
-                    }
-                }
-            }
-            result += prevChar;
-            return result;
-        }
-    }
-
     class DateTimeHelper {
         static toRelTime(dateString) {
             const SECOND = 1,
@@ -500,11 +421,6 @@
             });
         }
     }
-
-    // Listen on fill-in submissions
-    XHRSpy.add('/studentExercise/ajaxSubmitFill', (data, url) => {
-        FillInHelper.apply(data.test_txt);
-    });
 
     // Listen on nodes updates
     XHRSpy.add('/studentExercise/ajaxGetNodes', (data, url) => {
