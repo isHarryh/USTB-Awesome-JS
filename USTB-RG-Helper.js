@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         USTB RG Helper
 // @namespace    http://ucb.ustb.edu.cn/
-// @version      0.2
+// @version      0.3
 // @description  北京科技大学锐格实验平台辅助工具
 // @author       Harry Huang
 // @license      MIT
@@ -263,6 +263,7 @@
 
     class QuestionLoad {
         static load = {};
+        static answer = {};
 
         static updateLoad(newLoad) {
             QuestionLoad.load = newLoad;
@@ -306,6 +307,86 @@
                         }
                         $('#exercise_submit').append(wrapper);
                         wrapper.fadeIn();
+                    }
+                }
+            }
+        }
+
+        static showForceAnswer() {
+            const finalLoad = QuestionLoad.load;
+            if (finalLoad.currentEid !== null) {
+                const nodeData = QuestionTree.getNodeFromRealId(finalLoad.currentEid);
+                if (nodeData !== null) {
+                    const box = $(`
+                        <div id="rghForceAnswer" style="display:none">
+                            <div class="bold mgt30">参考答案:</div>
+                            <div class="mgt10 article bluebg scroll">
+                                <pre></pre>
+                            </div>
+                        </div>
+                    `);
+                    const wrapper = $(`
+                        <div class="mgt10 bold" style="display:none">
+                            <div class="fl clearfix mgt20">
+                                <a class="f_button4 btn" id="rghForceAnswerBtn">强制显示答案</a>
+                            </div>
+                        </div>`
+                    );
+                    const newBtn = wrapper.find('#rghForceAnswerBtn');
+                    const btn = $('#rghForceAnswerBtn');
+                    newBtn.click(() => {
+                        box.slideToggle();
+                    });
+
+                    const finalRealId = nodeData.realId;
+                    const finalSectionId = nodeData.sectionId;
+
+                    if (nodeData.realId != QuestionLoad.answer.realId || nodeData.sectionId != QuestionLoad.answer.sectionId) {
+                        XHRSender.get(
+                            `http://ucb.ustb.edu.cn/studentHome/popup?type=key&id=${finalRealId}&c_a_r=1&section_id=${finalSectionId}&sign=0`,
+                            (data) => {
+                                const parsedData = $('<section>').append(data);
+                                QuestionLoad.answer = {
+                                    realId: finalRealId,
+                                    sectionId: finalSectionId,
+                                    data: parsedData,
+                                    content: null
+                                };
+
+                                let answerDiv;
+                                if ((answerDiv = parsedData.find('#div_box_2')).length) {
+                                    console.log(answerDiv);
+                                    QuestionLoad.answer = {
+                                        realId: finalRealId,
+                                        sectionId: finalSectionId,
+                                        data:parsedData,
+                                        content: answerDiv.html()
+                                    };
+                                    console.log(answerDiv.html());
+                                    Logger.info(`获取参考答案已完成（题目ID：${finalRealId}，章节ID：${finalSectionId}，类型：普通）`);
+                                } else if ((answerDiv = parsedData.find('#div_box_1')).length) {
+                                    const jsVarMatch = /var\s+init_obj\s*=\s*(.+);/g.exec(parsedData.html());
+                                    if (jsVarMatch !== null) {
+                                        const answerObj = JSON.parse(jsVarMatch[1].replaceAll('\'', '\"'));
+                                        QuestionLoad.answer = {
+                                            realId: finalRealId,
+                                            sectionId: finalSectionId,
+                                            data:parsedData,
+                                            content: answerObj.content
+                                        };
+                                        console.log(answerObj.content);
+                                        Logger.info(`获取参考答案已完成（题目ID：${finalRealId}，章节ID：${finalSectionId}，类型：脚本）`);
+                                    }
+                                } else {
+                                    console.warn("Unknown answer response");
+                                }
+
+                                box.find('pre').append(QuestionLoad.answer.content);
+                                $('#exercise_submit').append(wrapper);
+                                $('#exercise_submit').append(box);
+                                wrapper.fadeIn();
+                            }
+                        );
                     }
                 }
             }
@@ -369,6 +450,23 @@
         }
     }
 
+    class XHRSender {
+        static get(url, callback) {
+            $.ajax({
+                type: 'GET',
+                url: url,
+                async: true,
+                beforeSend: (xhr) => {},
+                success: (data, status, xhr) => {
+                    callback(data);
+                },
+                error: (xhr, options, err) => {
+                    console.error("Request sending failed", e)
+                }
+            });
+        }
+    }
+
     class XHRSpy {
         static listeners = [];
         static originalSend = XMLHttpRequest.prototype.send;
@@ -418,6 +516,7 @@
     setInterval(() => {
         DateTimeHelper.showRelTimeOnArticle();
         QuestionLoad.showForceSubmit();
+        QuestionLoad.showForceAnswer();
         Logger.showStatusBar();
     }, 1000);
 
