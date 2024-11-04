@@ -367,15 +367,17 @@
                                 } else if ((answerDiv = parsedData.find('#div_box_1')).length) {
                                     const jsVarMatch = /var\s+init_obj\s*=\s*(.+);/g.exec(parsedData.html());
                                     if (jsVarMatch !== null) {
-                                        const answerObj = JSON.parse(jsVarMatch[1].replaceAll('\'', '\"'));
-                                        QuestionLoad.answer = {
-                                            realId: finalRealId,
-                                            sectionId: finalSectionId,
-                                            data:parsedData,
-                                            content: answerObj.content
-                                        };
-                                        console.log(answerObj.content);
-                                        Logger.info(`获取参考答案已完成（题目ID：${finalRealId}，章节ID：${finalSectionId}，类型：脚本）`);
+                                        const jsContentMatch = /['"]content['"]\s*:\s*['"](.+)['"]\s*,\s*['"]courseLang['"]\s*:/g.exec(jsVarMatch[1]);
+                                        if (jsContentMatch !== null) {
+                                            QuestionLoad.answer = {
+                                                realId: finalRealId,
+                                                sectionId: finalSectionId,
+                                                data:parsedData,
+                                                content: QuestionLoad.decodeRawJSONString(jsContentMatch[1])
+                                            };
+                                            console.log(QuestionLoad.decodeRawJSONString(jsContentMatch[1]));
+                                            Logger.info(`获取参考答案已完成（题目ID：${finalRealId}，章节ID：${finalSectionId}，类型：脚本）`);
+                                        }
                                     }
                                 } else {
                                     console.warn("Unknown answer response");
@@ -390,6 +392,10 @@
                     }
                 }
             }
+        }
+
+        static decodeRawJSONString(str) {
+            return JSON.parse(`"${str.replaceAll('\"', '\\\"')}"`);
         }
     }
 
