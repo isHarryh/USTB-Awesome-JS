@@ -1,6 +1,5 @@
 // ==UserScript==
 // @name         USTB RG Helper
-// @namespace    http://ucb.ustb.edu.cn/
 // @version      0.3
 // @description  北京科技大学锐格实验平台辅助工具
 // @author       Harry Huang
@@ -9,6 +8,8 @@
 // @run-at       document-body
 // @grant        GM_addStyle
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js
+// @source       https://github.com/isHarryh/USTB-OES-JS
+// @namespace    http://ucb.ustb.edu.cn/
 // ==/UserScript==
 
 (function() {
