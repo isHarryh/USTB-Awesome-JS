@@ -266,7 +266,7 @@
         static answer = {};
 
         static updateLoad(newLoad) {
-            QuestionLoad.load = newLoad;
+            QuestionLoad.load = QuestionTree.getNodeFromRealId(newLoad.currentEid);
             if (QuestionLoad.load) {
                 Logger.info("题目详情加载完成（实际ID："+ newLoad.currentEid +"，类型：" + newLoad.type + "）");
             } else {
@@ -286,109 +286,103 @@
         }
 
         static showForceSubmit() {
-            const finalLoad = QuestionLoad.load;
-            if (finalLoad.currentEid !== null) {
-                const nodeData = QuestionTree.getNodeFromRealId(finalLoad.currentEid);
-                if (nodeData !== null) {
-                    const btn = $('#rghForceSubmit');
-                    const wrapper = $(`
-                        <div class="mgt10 bold" style="display:none">
-                            <div class="fl clearfix mgt20">
-                                <a submitbtn="1" class="f_button4 btn" id="rghForceSubmit">强制提交</a>
-                            </div>
-                        </div>`
-                    );
-                    const btnNew = wrapper.find('#rghForceSubmit');
+            const nodeData = QuestionLoad.load;
+            if (nodeData !== null) {
+                const btn = $('#rghForceSubmit');
+                const wrapper = $(`
+                    <div class="mgt10 bold" style="display:none">
+                        <div class="fl clearfix mgt20">
+                            <a submitbtn="1" class="f_button4 btn" id="rghForceSubmit">强制提交</a>
+                        </div>
+                    </div>`
+                );
+                const btnNew = wrapper.find('#rghForceSubmit');
 
-                    // Question type: 0=Selection, 1=FillIn, 2=Program
-                    switch (finalLoad.type) {
-                        case '0':
-                            btnNew.prop('href', `javascript:submitSel(${nodeData.realId},0,0,${nodeData.sectionId})`);
-                            break;
-                        case '1':
-                            btnNew.prop('href', `javascript:submitFill(${nodeData.realId},0,0,${nodeData.sectionId})`);
-                            break;
-                        case '2':
-                            btnNew.prop('onclick', `return setmyselflanguage();`);
-                            btnNew.prop('href', `javascript:submitPrg(${nodeData.realId},0,0,${nodeData.sectionId})`);
-                            break;
-                        default:
-                            return;
-                    }
+                // Question type: 0=Selection, 1=FillIn, 2=Program
+                switch (nodeData.type) {
+                    case '0':
+                        btnNew.prop('href', `javascript:submitSel(${nodeData.realId},0,0,${nodeData.sectionId})`);
+                        break;
+                    case '1':
+                        btnNew.prop('href', `javascript:submitFill(${nodeData.realId},0,0,${nodeData.sectionId})`);
+                        break;
+                    case '2':
+                        btnNew.prop('onclick', `return setmyselflanguage();`);
+                        btnNew.prop('href', `javascript:submitPrg(${nodeData.realId},0,0,${nodeData.sectionId})`);
+                        break;
+                    default:
+                        return;
+                }
 
-                    if (btn.prop('href') !== btnNew.prop('href') || btn === null) {
-                        if (btn !== null) {
-                            btn.remove();
-                        }
-                        $('#exercise_submit').append(wrapper);
-                        wrapper.fadeIn();
+                if (btn.prop('href') !== btnNew.prop('href') || btn === null) {
+                    if (btn !== null) {
+                        btn.remove();
                     }
+                    $('#exercise_submit').append(wrapper);
+                    wrapper.fadeIn();
                 }
             }
         }
 
         static showForceAnswer() {
-            const finalLoad = QuestionLoad.load;
-            if (finalLoad.currentEid !== null) {
-                const nodeData = QuestionTree.getNodeFromRealId(finalLoad.currentEid);
-                if (nodeData !== null) {
-                    const box = $(`
-                        <div id="rghForceAnswer" style="display:none">
-                            <div class="bold mgt30">参考答案:</div>
-                            <div class="mgt10 article bluebg scroll">
-                                <pre></pre>
-                            </div>
+            const nodeData = QuestionLoad.load;
+            if (nodeData !== null) {
+                const box = $(`
+                    <div id="rghForceAnswer" style="display:none">
+                        <div class="bold mgt30">参考答案:</div>
+                        <div class="mgt10 article bluebg scroll">
+                            <pre></pre>
                         </div>
-                    `);
-                    const wrapper = $(`
-                        <div class="mgt10 bold" style="display:none">
-                            <div class="fl clearfix mgt20">
-                                <a class="f_button4 btn" id="rghForceAnswerBtn">强制显示答案</a>
-                            </div>
-                        </div>`
-                    );
-                    const newBtn = wrapper.find('#rghForceAnswerBtn');
-                    const btn = $('#rghForceAnswerBtn');
-                    newBtn.click(() => {
-                        box.slideToggle();
-                    });
+                    </div>
+                `);
+                const wrapper = $(`
+                    <div class="mgt10 bold" style="display:none">
+                        <div class="fl clearfix mgt20">
+                            <a class="f_button4 btn" id="rghForceAnswerBtn">强制显示答案</a>
+                        </div>
+                    </div>`
+                );
+                const newBtn = wrapper.find('#rghForceAnswerBtn');
+                const btn = $('#rghForceAnswerBtn');
+                newBtn.click(() => {
+                    box.slideToggle();
+                });
 
-                    if (!QuestionLoad.isCurrentLoadNode(QuestionLoad.answer)) {
-                        const finalNodeData = JSON.parse(JSON.stringify(nodeData));
-                        XHRSender.get(
-                            `http://ucb.ustb.edu.cn/studentHome/popup?type=key&id=${finalNodeData.realId}&c_a_r=1&section_id=${finalNodeData.sectionId}&sign=0`,
-                            (data) => {
-                                if (!QuestionLoad.isCurrentLoadNode(finalNodeData)) {
-                                    console.log("Answer response fetched but node changed");
-                                    return;
-                                }
-                                const parsedHtml = $('<section>').append(data);
-                                QuestionLoad.updateAnswer(finalNodeData, null);
-
-                                let answerDiv;
-                                if ((answerDiv = parsedHtml.find('#div_box_2')).length) {
-                                    const answerStr = answerDiv.html();
-                                    QuestionLoad.updateAnswer(finalNodeData, answerStr);
-                                } else if ((answerDiv = parsedHtml.find('#div_box_1')).length) {
-                                    const jsVarMatch = /var\s+init_obj\s*=\s*(.+);/g.exec(parsedHtml.html());
-                                    if (jsVarMatch !== null) {
-                                        const jsContentMatch = /['"]content['"]\s*:\s*['"](.+)['"]\s*,\s*['"]courseLang['"]\s*:/g.exec(jsVarMatch[1]);
-                                        if (jsContentMatch !== null) {
-                                            const answerStr = jsContentMatch[1];
-                                            QuestionLoad.updateAnswer(finalNodeData, QuestionLoad.decodeRawJSONString(answerStr));
-                                        }
-                                    }
-                                } else {
-                                    console.warn("Unknown answer response");
-                                }
-
-                                box.find('pre').append(QuestionLoad.answer.content);
-                                $('#exercise_submit').append(wrapper);
-                                $('#exercise_submit').append(box);
-                                wrapper.fadeIn();
+                if (!QuestionLoad.isCurrentLoadNode(QuestionLoad.answer)) {
+                    const finalNodeData = JSON.parse(JSON.stringify(nodeData));
+                    XHRSender.get(
+                        `http://ucb.ustb.edu.cn/studentHome/popup?type=key&id=${finalNodeData.realId}&c_a_r=1&section_id=${finalNodeData.sectionId}&sign=0`,
+                        (data) => {
+                            if (!QuestionLoad.isCurrentLoadNode(finalNodeData)) {
+                                console.log("Answer response fetched but node changed");
+                                return;
                             }
-                        );
-                    }
+                            const parsedHtml = $('<section>').append(data);
+                            QuestionLoad.updateAnswer(finalNodeData, null);
+
+                            let answerDiv;
+                            if ((answerDiv = parsedHtml.find('#div_box_2')).length) {
+                                const answerStr = answerDiv.html();
+                                QuestionLoad.updateAnswer(finalNodeData, answerStr);
+                            } else if ((answerDiv = parsedHtml.find('#div_box_1')).length) {
+                                const jsVarMatch = /var\s+init_obj\s*=\s*(.+);/g.exec(parsedHtml.html());
+                                if (jsVarMatch !== null) {
+                                    const jsContentMatch = /['"]content['"]\s*:\s*['"](.+)['"]\s*,\s*['"]courseLang['"]\s*:/g.exec(jsVarMatch[1]);
+                                    if (jsContentMatch !== null) {
+                                        const answerStr = jsContentMatch[1];
+                                        QuestionLoad.updateAnswer(finalNodeData, QuestionLoad.decodeRawJSONString(answerStr));
+                                    }
+                                }
+                            } else {
+                                console.warn("Unknown answer response");
+                            }
+
+                            box.find('pre').append(QuestionLoad.answer.content);
+                            $('#exercise_submit').append(wrapper);
+                            $('#exercise_submit').append(box);
+                            wrapper.fadeIn();
+                        }
+                    );
                 }
             }
         }
@@ -398,8 +392,7 @@
         }
 
         static isCurrentLoadNode(nodeData) {
-            const curNodeData = QuestionTree.getNodeFromRealId(QuestionLoad.load.currentEid);
-            return nodeData.realId == curNodeData.realId && nodeData.sectionId == curNodeData.sectionId;
+            return nodeData.realId == QuestionLoad.load.realId && nodeData.sectionId == QuestionLoad.load.sectionId;
         }
     }
 
