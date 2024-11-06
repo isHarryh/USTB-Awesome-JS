@@ -17,6 +17,10 @@
 
     // Optimize webpage style
     GM_addStyle(`
+        .analysisMode .analysisInfo {
+            padding: 6px 12px !important;
+            margin: 12px 0 6px 0 !important;
+        }
     `);
 
     class QuizBean {
@@ -71,14 +75,14 @@
                                 const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
                                 const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
 
-                const box = $(`
+                                const box = $(`
                                     <div class="analysisInfo mghAnswerO" style="display:none">
                                         <div>
                                             <span class="f-f0 tt1">MOOC Helper 提供的答案：</span>
                                             <span class="f-f0 tt2">${rightAnsStr}</span>
                                         </div>
-                    </div>
-                `);
+                                    </div>
+                                `);
                                 if (myAnsStr !== rightAnsStr) {
                                     box.addClass('answrong');
                                     box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
@@ -135,15 +139,15 @@
                     if (q.optionList[i].optionId === e) {
                         rst.push(i);
                     }
-                            }
-                        });
+                }
+            });
             return rst;
         }
 
         static convertOptionIdxToLetter(optionIdx) {
             if (Number.isInteger(optionIdx)) {
                 return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[optionIdx];
-                } else {
+            } else {
                 const rst = [];
                 optionIdx.sort();
                 optionIdx.forEach((e) => {
