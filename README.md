@@ -19,6 +19,11 @@ USTB Online Exam Script
 
 当锐格平台脚本正常运行时，页面底部会显示相应的提示。
 
+### 网易慕课
+脚本文件 `MOOC-Helper.js` 是针对中国大学 MOOC（简称网易慕课，公网访问 https://www.icourse163.org ）的辅助工具，具有如下功能：
+
+1. 提交至少一次课程测验后即可在测验详情页面查看参考答案，无需消耗所有测验次数后再查看。
+
 ## 使用方法 <sub>Usage</sub>
 1. **在浏览器中安装脚本管理器插件。**  
    推荐的浏览器是 [Edge 浏览器](https://www.microsoft.com/zh-cn/edge/download) 或 [Chrome 浏览器](https://www.google.cn/chrome/index.html)。推荐的脚本管理器插件是 [TamperMonkey 篡改猴](https://www.tampermonkey.net/)。
