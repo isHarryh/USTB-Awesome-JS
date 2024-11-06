@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MOOC Helper
-// @version      0.1
+// @version      0.2
 // @description  中国大学MOOC慕课辅助脚本
 // @author       Harry Huang
 // @license      MIT
@@ -54,49 +54,102 @@
         }
 
         static showPaperAnswer() {
-            if ($('.j-scoreInfo').length) {
-                // Read quiz bean data to get answers
+            if (QuizBean.paper.answers) {
+                // Attach answer display box to the question
+                const wrapper = $('.j-quizPool .j-data-list');
+                if (wrapper.length) {
+                    let curIdxO = 0;
+                    wrapper.children().each((_, e) => {
+                        e = $(e);
+                        if (e.hasClass('m-choiceQuestion') && e.find('.j-choicebox').length) {
+                            // Objective question element
+                            if (curIdxO < QuizBean.paper.questionListO.length) {
+                                const q = QuizBean.paper.questionListO[curIdxO];
+                                const rightAnsIdx = QuizBean.getRightOptionIdxFromQuestionO(q);
+                                const rightAnsStr = QuizBean.convertOptionIdxToLetter(rightAnsIdx);
+                                const a = QuizBean.getAnswerOById(q.questionId);
+                                const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
+                                const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
+
                 const box = $(`
-                    <div id="mchPaperAnswer" class="totalScore f-f0" style="display:none">
-                        <p><b>MOOC Helper:</b></p>
+                                    <div class="analysisInfo mghAnswerO" style="display:none">
+                                        <div>
+                                            <span class="f-f0 tt1">MOOC Helper 提供的答案：</span>
+                                            <span class="f-f0 tt2">${rightAnsStr}</span>
+                                        </div>
                     </div>
                 `);
-                let hasAnswer = false;
-                if (QuizBean.paper.answerId) {
-                    for (let ei = 0; ei < QuizBean.paper.questionListO.length; ei++) {
-                        const e = QuizBean.paper.questionListO[ei];
-                        const correctIdx = [];
-                        for (let oi = 0; oi < e.optionList.length; oi++) {
-                            const o = e.optionList[oi];
-                            if (o.isAnswer) {
-                                correctIdx.push(oi);
-                                hasAnswer = true;
+                                if (myAnsStr !== rightAnsStr) {
+                                    box.addClass('answrong');
+                                    box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
+                                }
+                                curIdxO++;
+                                const oldBox = e.find('.mghAnswerO');
+                                if (!oldBox.length || oldBox.html() !== box.html()) {
+                                    if (oldBox.length) {
+                                        oldBox.remove();
+                                    }
+                                    e.find('.j-choicebox').append(box);
+                                    box.slideDown();
+                                }
                             }
                         }
-                        box.append(`${ei + 1}.`);
-                        correctIdx.forEach((oi) => {
-                            if (0 <= oi && oi < 26) {
-                                box.append("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[oi]);
-                            } else {
-                                console.warn("Invalid option index");
+                    });
+                }
+            }
+        }
+
+        static getQuestionOById(questionId) {
+            for (let i = 0; i < QuizBean.paper.questionListO.length; i++) {
+                if (QuizBean.paper.questionListO[i].questionId === questionId) {
+                    return QuizBean.paper.questionListO[i];
+                }
+            }
+            return null;
+        }
+
+        static getAnswerOById(questionId) {
+            for (let i = 0; i < QuizBean.paper.answers.length; i++) {
+                if (QuizBean.paper.answers[i].questionId === questionId) {
+                    return QuizBean.paper.answers[i];
+                }
+            }
+            return null;
+        }
+
+        static getRightOptionIdxFromQuestionO(question) {
+            const rst = [];
+            for (let i = 0; i < question.optionList.length; i++) {
+                if (question.optionList[i].isAnswer) {
+                    rst.push(i);
+                }
+            }
+            return rst;
+        }
+
+        static getMyOptionIdxFromAnswerO(answer) {
+            const q = QuizBean.getQuestionOById(answer.questionId);
+            const rst = [];
+            answer.optionIdList.forEach((e) => {
+                for (let i = 0; i < q.optionList.length; i++) {
+                    if (q.optionList[i].optionId === e) {
+                        rst.push(i);
+                    }
                             }
                         });
-                        box.append("&nbsp;");
-                    }
-                }
+            return rst;
+        }
 
-                // Show display box in document
-                const oldBox = $('#mchPaperAnswer');
-                if (oldBox.length) {
-                    if (oldBox.html() !== box.html()) {
-                        oldBox.remove();
-                    }
+        static convertOptionIdxToLetter(optionIdx) {
+            if (Number.isInteger(optionIdx)) {
+                return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[optionIdx];
                 } else {
-                    if (hasAnswer) {
-                        box.insertAfter($('.j-scoreInfo'));
-                        box.fadeIn();
-                    }
-                }
+                const rst = [];
+                optionIdx.sort();
+                optionIdx.forEach((e) => {
+                    rst.push("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[e]);
+                });
+                return rst.join('');
             }
         }
     }
