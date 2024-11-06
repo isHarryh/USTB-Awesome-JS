@@ -58,49 +58,76 @@
         }
 
         static showPaperAnswer() {
-            if (QuizBean.paper.answers) {
-                // If answers exists:
-                const wrapper = $('.j-quizPool .j-data-list');
-                if (wrapper.length) {
-                    // If wrapper exists:
-                    let curIdxO = 0;
-                    wrapper.children().each((_, e) => {
-                        // For each children in wrapper:
-                        e = $(e);
-                        if (e.hasClass('m-choiceQuestion') && e.find('.j-choicebox').length &&
-                            curIdxO < QuizBean.paper.questionListO.length) {
-                            // If this is an objective question element
-                            const q = QuizBean.paper.questionListO[curIdxO++];
-                            const rightAnsIdx = QuizBean.getRightOptionIdxFromQuestionO(q);
-                            const rightAnsStr = QuizBean.convertOptionIdxToLetter(rightAnsIdx);
-                            const a = QuizBean.getAnswerOById(q.questionId);
-                            const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
-                            const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
-                            // Attach embedded answer display
-                            const box = $(`
-                                <div class="analysisInfo mghAnswerO" style="display:none">
-                                    <div>
-                                        <span class="f-f0 tt1">MOOC Helper 提供的答案：</span>
-                                        <span class="f-f0 tt2">${rightAnsStr}</span>
-                                    </div>
+            let successCount = 0;
+            // Step 1. Attach embedded answer display to each answer
+            const wrapper = $('.j-quizPool .j-data-list');
+            if (QuizBean.paper.answers && wrapper.length) {
+                // If answers exists and wrapper exists:
+                let curIdxO = 0;
+                wrapper.children().each((_, e) => {
+                    // For each children in wrapper:
+                    e = $(e);
+                    if (e.hasClass('m-choiceQuestion') && e.find('.j-choicebox').length &&
+                        curIdxO < QuizBean.paper.questionListO.length) {
+                        // If this is an objective question element
+                        const q = QuizBean.paper.questionListO[curIdxO++];
+                        const rightAnsIdx = QuizBean.getRightOptionIdxFromQuestionO(q);
+                        const rightAnsStr = QuizBean.convertOptionIdxToLetter(rightAnsIdx);
+                        const a = QuizBean.getAnswerOById(q.questionId);
+                        const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
+                        const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
+                        // Attach embedded answer display
+                        const box = $(`
+                            <div class="analysisInfo mghAnswerO" style="display:none">
+                                <div>
+                                    <span class="f-f0 tt1">MOOC Helper 获取的答案：</span>
+                                    <span class="f-f0 tt2">${rightAnsStr}</span>
                                 </div>
-                            `);
-                            if (myAnsStr !== rightAnsStr) {
-                                box.addClass('answrong');
-                                box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
-                            }
-                            const oldBox = e.find('.mghAnswerO');
-                            if (!oldBox.length || oldBox.html() !== box.html()) {
-                                if (oldBox.length) {
-                                    oldBox.remove();
-                                }
-                                e.find('.j-choicebox').append(box);
-                                box.slideDown();
-                            }
+                            </div>
+                        `);
+                        if (myAnsStr !== rightAnsStr) {
+                            box.addClass('answrong');
+                            box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
                         }
-                    }); // End foreach (wrapper children)
-                } // End if (wrapper exists)
-            } // End if (answers exists)
+                        const oldBox = e.find('.mghAnswerO');
+                        if (!oldBox.length || oldBox.html() !== box.html()) {
+                            if (oldBox.length) {
+                                oldBox.remove();
+                            }
+                            e.find('.j-choicebox').append(box);
+                            box.slideDown();
+                        }
+                        successCount++;
+                    }
+                }); // End foreach
+            } // End if
+
+            // Step 2. Update status display
+            if (wrapper.length) {
+                const insertAfter = $('.j-scoreInfo');
+                if (insertAfter.length) {
+                    const statusBox = $(`
+                        <div id="mchPaperStatus" class="totalScore f-f0" style="display:none">
+                            <p><b>MOOC Helper:</b></p>
+                        </div>`
+                    );
+                    if (successCount > 0) {
+                        statusBox.append("已显示参考答案。请注意，每次测验的题目或选项顺序可能改变。");
+                        statusBox.append('<br>');
+                        statusBox.append(`本次一共成功获取了 <b>${successCount}</b> 道客观题答案。`);
+                    } else {
+                        statusBox.append("未成功获取到参考答案。可能是该测验记录尚未提交，或者题型不兼容。");
+                    }
+                    const oldStatusBox = $('#mchPaperStatus');
+                    if (!oldStatusBox.length || oldStatusBox.html() !== statusBox.html()) {
+                        if (oldStatusBox.length) {
+                            oldStatusBox.remove();
+                        }
+                        statusBox.insertAfter(insertAfter);
+                        statusBox.slideDown();
+                    }
+                }
+            } // End if
         } // End method
 
         static getQuestionOById(questionId) {
