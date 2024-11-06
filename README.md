@@ -1,12 +1,12 @@
 USTB-OES-JS
 ==========
-USTB Online Experiment Script  
-北京科技大学线上实验平台辅助脚本
+USTB Online Exam Script  
+北京科技大学线上作业与测验平台辅助脚本合集
 
 <sup> This project only supports Chinese docs. If you are an English user, feel free to contact us. </sup>
 
 ## 介绍 <sub>Intro</sub>
-本项目包含了针对北京科技大学的各类线上实验平台而开发的浏览器脚本。目前支持的平台如下：
+本项目包含了针对北京科技大学的各类线上作业与测验平台而开发的浏览器脚本。目前支持的平台如下：
 
 ### 锐格平台
 脚本文件 `USTB-RG-Helper.js` 是针对北京科技大学程序设计考试平台（简称锐格平台，内网访问 http://ucb.ustb.edu.cn ）的辅助工具，具有如下功能：
@@ -16,6 +16,8 @@ USTB Online Experiment Script
 3. 解决无法**选取和复制**网页中的文本的问题。
 4. 优化题目截止时间的显示。
 5. 调整少量界面样式。
+
+当锐格平台脚本正常运行时，页面底部会显示相应的提示。
 
 ## 使用方法 <sub>Usage</sub>
 1. **在浏览器中安装脚本管理器插件。**  
