@@ -59,49 +59,49 @@
 
         static showPaperAnswer() {
             if (QuizBean.paper.answers) {
-                // Attach answer display box to the question
+                // If answers exists:
                 const wrapper = $('.j-quizPool .j-data-list');
                 if (wrapper.length) {
+                    // If wrapper exists:
                     let curIdxO = 0;
                     wrapper.children().each((_, e) => {
+                        // For each children in wrapper:
                         e = $(e);
-                        if (e.hasClass('m-choiceQuestion') && e.find('.j-choicebox').length) {
-                            // Objective question element
-                            if (curIdxO < QuizBean.paper.questionListO.length) {
-                                const q = QuizBean.paper.questionListO[curIdxO];
-                                const rightAnsIdx = QuizBean.getRightOptionIdxFromQuestionO(q);
-                                const rightAnsStr = QuizBean.convertOptionIdxToLetter(rightAnsIdx);
-                                const a = QuizBean.getAnswerOById(q.questionId);
-                                const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
-                                const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
-
-                                const box = $(`
-                                    <div class="analysisInfo mghAnswerO" style="display:none">
-                                        <div>
-                                            <span class="f-f0 tt1">MOOC Helper 提供的答案：</span>
-                                            <span class="f-f0 tt2">${rightAnsStr}</span>
-                                        </div>
+                        if (e.hasClass('m-choiceQuestion') && e.find('.j-choicebox').length &&
+                            curIdxO < QuizBean.paper.questionListO.length) {
+                            // If this is an objective question element
+                            const q = QuizBean.paper.questionListO[curIdxO++];
+                            const rightAnsIdx = QuizBean.getRightOptionIdxFromQuestionO(q);
+                            const rightAnsStr = QuizBean.convertOptionIdxToLetter(rightAnsIdx);
+                            const a = QuizBean.getAnswerOById(q.questionId);
+                            const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
+                            const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
+                            // Attach embedded answer display
+                            const box = $(`
+                                <div class="analysisInfo mghAnswerO" style="display:none">
+                                    <div>
+                                        <span class="f-f0 tt1">MOOC Helper 提供的答案：</span>
+                                        <span class="f-f0 tt2">${rightAnsStr}</span>
                                     </div>
-                                `);
-                                if (myAnsStr !== rightAnsStr) {
-                                    box.addClass('answrong');
-                                    box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
+                                </div>
+                            `);
+                            if (myAnsStr !== rightAnsStr) {
+                                box.addClass('answrong');
+                                box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
+                            }
+                            const oldBox = e.find('.mghAnswerO');
+                            if (!oldBox.length || oldBox.html() !== box.html()) {
+                                if (oldBox.length) {
+                                    oldBox.remove();
                                 }
-                                curIdxO++;
-                                const oldBox = e.find('.mghAnswerO');
-                                if (!oldBox.length || oldBox.html() !== box.html()) {
-                                    if (oldBox.length) {
-                                        oldBox.remove();
-                                    }
-                                    e.find('.j-choicebox').append(box);
-                                    box.slideDown();
-                                }
+                                e.find('.j-choicebox').append(box);
+                                box.slideDown();
                             }
                         }
-                    });
-                }
-            }
-        }
+                    }); // End foreach (wrapper children)
+                } // End if (wrapper exists)
+            } // End if (answers exists)
+        } // End method
 
         static getQuestionOById(questionId) {
             for (let i = 0; i < QuizBean.paper.questionListO.length; i++) {
