@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MOOC Helper
-// @version      0.2
+// @version      0.3
 // @description  中国大学MOOC慕课辅助脚本
 // @author       Harry Huang
 // @license      MIT
@@ -112,9 +112,15 @@
                         </div>`
                     );
                     if (successCount > 0) {
-                        statusBox.append("已显示参考答案。请注意，每次测验的题目或选项顺序可能改变。");
-                        statusBox.append('<br>');
+                        statusBox.append("已显示参考答案。");
                         statusBox.append(`本次一共成功获取了 <b>${successCount}</b> 道客观题答案。`);
+                        const regex = /(.+#\/learn\/)quizscore\?id=(\d+)&aid=\d+/;
+                        if (regex.test(document.URL)) {
+                            const href = document.URL.replace(regex, '$1quiz?id=$2');
+                            statusBox.append('<br>');
+                            statusBox.append(`请注意，每次测验的题目或选项顺序可能改变。`)
+                            statusBox.append(`你可以选择 <a href="${href}" target="_blank">在新标签页中再做一次</a> 。`);
+                        }
                     } else {
                         statusBox.append("未成功获取到参考答案。可能是该测验记录尚未提交，或者题型不兼容。");
                     }
