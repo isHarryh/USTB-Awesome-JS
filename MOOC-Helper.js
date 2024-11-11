@@ -17,9 +17,25 @@
 
     // Optimize webpage style
     GM_addStyle(`
+        .m-learnhead {
+            height: 100px !important;
+        }
+
+        .m-learnhead-right div {
+            align-self: baseline !important;
+        }
+
+        .learnPageContent {
+            border-radius: 10px !important;
+        }
+
         .analysisMode .analysisInfo {
             padding: 6px 12px !important;
             margin: 12px 0 6px 0 !important;
+        }
+
+        .m-quizScore .totalScore {
+            margin: 10px 0 0 0 !important;
         }
     `);
 
