@@ -191,7 +191,8 @@
             QuestionLoad.load = QuestionTree.getNodeFromRealId(newLoad.currentEid);
             QuestionLoad.answer = null;
             if (QuestionLoad.load) {
-                Logger.info("题目详情加载完成（实际ID："+ newLoad.currentEid +"，类型：" + newLoad.type + "）");
+                const nodeData = QuestionLoad.load;
+                Logger.info(`题目详情加载完成（实际ID：${nodeData.realId}，章节：${nodeData.sectionId}）`);
             } else {
                 console.warn("Not parsed question load");
             }
@@ -204,7 +205,7 @@
                 content: content
             };
             if (content) {
-                Logger.info(`参考答案获取完成（题目ID：${nodeData.realId}，章节ID：${nodeData.sectionId}）`);
+                Logger.info(`参考答案获取完成（实际ID：${nodeData.realId}，章节：${nodeData.sectionId}）`);
             }
         }
 
@@ -269,7 +270,7 @@
             const answerDisplayPre = answerDisplay.find('pre');
             if (nodeData && answerDisplay.length && answerDisplayPre.length) {
                 if (!QuestionLoad.isCurrentLoadNode(QuestionLoad.answer)) {
-                    answerDisplayPre.text("正在获取参考答案...");
+                    answerDisplayPre.html("正在获取参考答案...");
 
                     const finalNodeData = JSON.parse(JSON.stringify(nodeData));
                     QuestionLoad.updateAnswer(finalNodeData, null);
@@ -290,7 +291,7 @@
                             if ((answerDiv = parsedHtml.find('#div_box_2')).length) {
                                 // Answer string in common div
                                 answerStr = answerDiv.html();
-                                answerStr = QuestionLoad.trimString(answerStr);
+                                answerStr = QuestionLoad.trimStringAlt(answerStr);
                                 QuestionLoad.updateAnswer(finalNodeData, answerStr);
                             } else if ((answerDiv = parsedHtml.find('#div_box_1')).length) {
                                 // Answer string in embedded script
@@ -309,7 +310,7 @@
                             }
 
                             // Add answer content to answer display element
-                            answerDisplayPre.text(QuestionLoad.answer.content);
+                            answerDisplayPre.html(QuestionLoad.answer.content);
 
                             // Add a copy button
                             const copyBtn = $(`<a class="f_button4 btn" style="font-weight:bold">复制</a>`);
@@ -340,6 +341,10 @@
 
         static trimString(str) {
             return str.trim();
+        }
+
+        static trimStringAlt(str) {
+            return str.trim().replaceAll('<br>\n', '\n').replaceAll('\n<br>', '\n');
         }
 
         static decodeRawJSONString(str) {
