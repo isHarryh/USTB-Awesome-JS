@@ -266,9 +266,10 @@
         static showForceAnswer() {
             const nodeData = QuestionLoad.load;
             const answerDisplay = $('#rghAnswerDisplay');
-            if (nodeData && answerDisplay.length) {
+            const answerDisplayPre = answerDisplay.find('pre');
+            if (nodeData && answerDisplay.length && answerDisplayPre.length) {
                 if (!QuestionLoad.isCurrentLoadNode(QuestionLoad.answer)) {
-                    answerDisplay.find('pre').text("正在获取参考答案...");
+                    answerDisplayPre.text("正在获取参考答案...");
 
                     const finalNodeData = JSON.parse(JSON.stringify(nodeData));
                     QuestionLoad.updateAnswer(finalNodeData, null);
@@ -307,7 +308,30 @@
                                 console.warn("Unknown answer response");
                             }
 
-                            answerDisplay.find('pre').text(QuestionLoad.answer.content);
+                            // Add answer content to answer display element
+                            answerDisplayPre.text(QuestionLoad.answer.content);
+
+                            // Add a copy button
+                            const copyBtn = $(`<a class="f_button4 btn" style="font-weight:bold">复制</a>`);
+                            copyBtn.click(() => {
+                                const textArea = $(`<textarea style='position:absolute;top:-9999px;left:-9999px;z-index:-9999'>`);
+                                $('body').append(textArea);
+                                textArea.val(answerDisplayPre.text()).select();
+                                try {
+                                    // Non-HTTPS website cannot use clipboard API, use legacy command instead
+                                    if (document.execCommand('copy')) {
+                                        copyBtn.text("复制成功");
+                                        Logger.info("参考答案已复制到剪贴板");
+                                    } else {
+                                        throw Error("Unable to execute copy command");
+                                    }
+                                } catch (err) {
+                                    copyBtn.text("复制失败");
+                                    console.warn("Unable to execute copy command");
+                                }
+                                textArea.remove();
+                            });
+                            answerDisplay.append(copyBtn);
                         }
                     );
                 }
