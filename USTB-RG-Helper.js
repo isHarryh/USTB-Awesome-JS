@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         USTB RG Helper
-// @version      0.4
+// @version      0.5
 // @description  北京科技大学锐格实验平台辅助工具
 // @author       Harry Huang
 // @license      MIT
@@ -184,11 +184,12 @@
     }
 
     class QuestionLoad {
-        static load = {};
-        static answer = {};
+        static load = null;
+        static answer = null;
 
         static updateLoad(newLoad) {
             QuestionLoad.load = QuestionTree.getNodeFromRealId(newLoad.currentEid);
+            QuestionLoad.answer = null;
             if (QuestionLoad.load) {
                 Logger.info("题目详情加载完成（实际ID："+ newLoad.currentEid +"，类型：" + newLoad.type + "）");
             } else {
@@ -221,6 +222,7 @@
                 `);
                 toolBar.find('#rghForceShowAnswer').click(() => {
                     $('#rghAnswerDisplay').slideToggle();
+                    QuestionLoad.showForceAnswer();
                 });
                 const answerDisplay = $(`
                     <div id="rghAnswerDisplay" style="display:none">
@@ -238,7 +240,7 @@
 
         static showForceSubmit() {
             const nodeData = QuestionLoad.load;
-            if (nodeData !== null) {
+            if (nodeData) {
                 QuestionLoad.ensureToolBar();
                 const btn = $('#rghForceSubmit');
                 if (btn.length) {
@@ -263,8 +265,11 @@
 
         static showForceAnswer() {
             const nodeData = QuestionLoad.load;
-            if (nodeData !== null) {
+            const answerDisplay = $('#rghAnswerDisplay');
+            if (nodeData && answerDisplay.length) {
                 if (!QuestionLoad.isCurrentLoadNode(QuestionLoad.answer)) {
+                    answerDisplay.find('pre').text("正在获取参考答案...");
+
                     const finalNodeData = JSON.parse(JSON.stringify(nodeData));
                     QuestionLoad.updateAnswer(finalNodeData, null);
 
@@ -302,10 +307,7 @@
                                 console.warn("Unknown answer response");
                             }
 
-                            const answerDisplay = $('#rghAnswerDisplay');
-                            if (answerDisplay.length) {
-                                answerDisplay.find('pre').append(QuestionLoad.answer.content);
-                            }
+                            answerDisplay.find('pre').text(QuestionLoad.answer.content);
                         }
                     );
                 }
@@ -321,6 +323,8 @@
         }
 
         static isCurrentLoadNode(nodeData) {
+            if (!nodeData || !QuestionLoad.load)
+                return false;
             return nodeData.realId == QuestionLoad.load.realId && nodeData.sectionId == QuestionLoad.load.sectionId;
         }
     }
@@ -444,7 +448,6 @@
     setInterval(() => {
         DateTimeHelper.showRelTimeOnArticle();
         QuestionLoad.showForceSubmit();
-        QuestionLoad.showForceAnswer();
         Logger.showStatusBar();
     }, 500);
 
