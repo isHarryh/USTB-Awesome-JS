@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MOOC Helper
-// @version      0.3
+// @version      0.4
 // @description  中国大学MOOC慕课辅助脚本
 // @author       Harry Huang
 // @license      MIT
@@ -40,7 +40,23 @@
     `);
 
     class QuizBean {
+        static info = {};
         static paper = {};
+
+        static updateInfo(data) {
+            QuizBean.info[data.tid] = {
+                quizId: data.tid,
+                quizName: data.name,
+                papers: data.ansformInfoList && data.ansformInfoList.map(e => ({
+                    answerId: e.aid,
+                    scoreFinal: e.finalScore,
+                    scoreTotal: e.totalScore,
+                })),
+                targetAnswerId: data.targetAnswerform && data.targetAnswerform.aid,
+                tryTimeLimit: data.totalTryCount,
+                tryTimeUsed: data.usedTryCount
+            };
+        }
 
         static updatePaper(data) {
             QuizBean.paper = {
@@ -252,6 +268,9 @@
     // Listen on quiz bean responses
     XHRSpy.add('/web/j/mocQuizRpcBean.getOpenQuizPaperDto.rpc', (data, url) => {
         QuizBean.updatePaper(data);
+    });
+    XHRSpy.add('/web/j/mocQuizRpcBean.getOpenQuizInfo.rpc', (data, url) => {
+        QuizBean.updateInfo(data);
     });
 
     setInterval(() => {
