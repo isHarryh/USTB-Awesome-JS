@@ -29,6 +29,14 @@
             border-radius: 10px !important;
         }
 
+        .u-quizHwListItem .detail {
+            padding: 10px 0 !important;
+        }
+
+        .u-quizHwInfoItem .infoItem {
+            margin: 10px 0 !important;
+        }
+
         .analysisMode .analysisInfo {
             padding: 6px 12px !important;
             margin: 12px 0 6px 0 !important;
@@ -168,6 +176,52 @@
             } // End if
         } // End method
 
+        static showQuizInfo() {
+            // Step 1. Unlock info of each quiz
+            const quizItems = $('.m-chapterQuizHwItem');
+            if (quizItems.length && Object.keys(QuizBean.info).length) {
+                if (quizItems.length === Object.keys(QuizBean.info).length) {
+                    quizItems.each((i, e) => {
+                        const curQuiz = QuizBean.info[Object.keys(QuizBean.info)[i]];
+                        QuizBean.showQuizInfoSingle(curQuiz, $(e));
+                    });
+                } else {
+                    console.warn("Inconsistent quiz item length");
+                }
+            }
+        }
+
+        static showQuizInfoSingle(curQuiz, curQuizElem) {
+            let count = 0;
+            const ansUl = curQuizElem.find('.j-ansul');
+            if (ansUl.length) {
+                const ansLis = ansUl.find('.f-cb').not('.hd');
+                if (ansLis.length && curQuiz.papers) {
+                    if (ansLis.length === curQuiz.papers.length) {
+                        ansLis.each((i, e) => {
+                            const curPaper = curQuiz.papers[Object.keys(curQuiz.papers)[i]];
+                            const trick = $(e).find('.j-triggerLockScore');
+                            if (trick.length) {
+                                trick.replaceWith(`<span>${curPaper.scoreFinal.toFixed(2)}（已解锁）</span>`);
+                                count += 1;
+                            }
+                        });
+                    } else {
+                        console.warn("Inconsistent answer list length");
+                    }
+                }
+            }
+            if (count) {
+                const tip = $(`
+                    <p class="infoItem">
+                        <span class="f-icon u-icon-warning2"></span>
+                        <span class="gray">MOOC Helper 已自动解锁 ${count} 个不可查看的分数</span>
+                    </p>
+                `);
+                tip.insertAfter(ansUl);
+            }
+        }
+
         static getQuestionOById(questionId) {
             for (let i = 0; i < QuizBean.paper.questionListO.length; i++) {
                 if (QuizBean.paper.questionListO[i].questionId === questionId) {
@@ -275,6 +329,7 @@
 
     setInterval(() => {
         QuizBean.showPaperAnswer();
+        QuizBean.showQuizInfo();
     }, 500);
 
     console.log("MOOC Helper Start");
