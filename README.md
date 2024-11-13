@@ -28,6 +28,8 @@ USTB Online Exam Script
 脚本文件 `MOOC-Helper.js` 是针对中国大学 MOOC（简称网易慕课，公网访问 https://www.icourse163.org ）的辅助工具，具有如下功能：
 
 1. 提交至少一次课程测验后即可**在测验详情页面查看参考答案**，无需消耗所有测验次数后再查看。
+2. 解决需要充值年卡才能查看某些课程的**测验分数**的问题。
+3. 调整少量界面样式。
 
 <details>
 <summary><b>开发者点评</b></summary>
