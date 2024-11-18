@@ -20,6 +20,11 @@ USTB Online Exam Script
 当锐格平台脚本正常运行时，页面底部会显示相应的提示。
 
 <details>
+<summary><b>效果预览图</b></summary>
+   <img alt="Demo" src="docs/imgs/Demo-USTB-RG-Helper.png">
+</details>
+
+<details>
 <summary><b>开发者点评</b></summary>
 锐格平台，前端设计非常陈旧，而且提交答案和查看答案等业务逻辑都只有前端检测，根本没有后端检测，漏洞和错误层出不穷。很轻易地，我们就能实现仿造请求等越权操作。
 </details>
@@ -42,7 +47,9 @@ USTB Online Exam Script
 2. **在脚本管理器中添加脚本文件。**  
    在本仓库中找到所需的 JS 脚本文件并下载，然后将其导入到脚本管理器（把文件内容复制到篡改猴的脚本编辑器里保存，或者直接导入整个文件）。
 3. **打开对应的线上平台即可运行。**  
-   如果网页已经打开，则需要刷新才能启动脚本。如果仍无法生效，请检查脚本管理器的权限是否受限。
+   如果网页已经打开，则需要刷新才能启动脚本。如果仍然无法生效，请在管理扩展的页面中勾选开发人员模式。
+
+> 👉 [**在这里查看详细的图文教程**](docs/Installation.md)
 
 ## 许可证 <sub>Licensing</sub>
 本项目基于 **MIT 开源许可证**，详情参见 [License](https://github.com/isHarryh/USTB-OES-JS/blob/main/LICENSE) 页面。
