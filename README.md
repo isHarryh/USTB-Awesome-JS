@@ -41,6 +41,11 @@ USTB Online Exam Script
 网易慕课，充斥着各类诱导消费和广告，里里外外都是资本和垄断的味道。身为大公司，网易在 API 请求中的数据抹除做得非常完善。而我们的脚本利用了 API 请求中的鲜有的冗余字段来将不可查看的答案变得可见。
 </details>
 
+### 超星学习通
+脚本文件 `Chaoxing-Helper.js` 是针对超星学习通的辅助工具，具有如下功能：
+
+1. 在测验详情页面提供**紧凑视图**，以便复习和打印题目。
+
 ## 使用方法 <sub>Usage</sub>
 1. **在浏览器中安装脚本管理器插件。**  
    推荐的浏览器是 [Edge 浏览器](https://www.microsoft.com/zh-cn/edge/download) 或 [Chrome 浏览器](https://www.google.cn/chrome/index.html)。推荐的脚本管理器插件是 [TamperMonkey 篡改猴](https://www.tampermonkey.net/)。
