@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MOOC Helper
-// @version      0.4
+// @version      0.5
 // @description  中国大学MOOC慕课辅助脚本
 // @author       Harry Huang
 // @license      MIT
@@ -40,6 +40,11 @@
         .analysisMode .analysisInfo {
             padding: 6px 12px !important;
             margin: 12px 0 6px 0 !important;
+        }
+
+        .analysisMode .anserror {
+            background: #f3f5ff !important;
+            border: 1px solid #bbc0f6 !important;
         }
 
         .m-quizScore .totalScore {
@@ -114,21 +119,35 @@
                         const rightAnsIdx = QuizBean.getRightOptionIdxFromQuestionO(q);
                         const rightAnsStr = QuizBean.convertOptionIdxToLetter(rightAnsIdx);
                         const a = QuizBean.getAnswerOById(q.questionId);
-                        const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
-                        const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
-                        // Attach embedded answer display
-                        const box = $(`
-                            <div class="analysisInfo mghAnswerO" style="display:none">
-                                <div>
-                                    <span class="f-f0 tt1">MOOC Helper 获取的答案：</span>
-                                    <span class="f-f0 tt2">${rightAnsStr}</span>
+                        let box = $(`<div></div>`);
+
+                        if (a && q.questionType == 1) {
+                            const myAnsIdx = QuizBean.getMyOptionIdxFromAnswerO(a)
+                            const myAnsStr = QuizBean.convertOptionIdxToLetter(myAnsIdx);
+                            // Attach embedded answer display
+                            box = $(`
+                                <div class="analysisInfo mghAnswerO" style="display:none">
+                                    <div>
+                                        <span class="f-f0 tt1">MOOC Helper 获取的答案：</span>
+                                        <span class="f-f0 tt2">${rightAnsStr}</span>
+                                    </div>
                                 </div>
-                            </div>
-                        `);
-                        if (myAnsStr !== rightAnsStr) {
-                            box.addClass('answrong');
-                            box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
+                            `);
+                            if (myAnsStr !== rightAnsStr) {
+                                box.addClass('answrong');
+                                box.find('div').append(`<span class="tt3">你错选为${myAnsStr}</span>`);
+                            }
+                            successCount++;
+                        } else {
+                            box = $(`
+                                <div class="analysisInfo mghAnswerO anserror" style="display:none">
+                                    <div>
+                                        <span class="f-f0 tt1">MOOC Helper 无法获取本题答案，可能是题型不支持或您未作答。</span>
+                                    </div>
+                                </div>
+                            `);
                         }
+
                         const oldBox = e.find('.mghAnswerO');
                         if (!oldBox.length || oldBox.html() !== box.html()) {
                             if (oldBox.length) {
@@ -137,7 +156,6 @@
                             e.find('.j-choicebox').append(box);
                             box.slideDown();
                         }
-                        successCount++;
                     }
                 }); // End foreach
             } // End if
