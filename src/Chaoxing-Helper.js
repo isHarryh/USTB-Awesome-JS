@@ -8,7 +8,7 @@
 // @run-at       document-start
 // @grant        GM_addStyle
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js
-// @source       https://github.com/isHarryh/USTB-OES-JS
+// @source       https://github.com/isHarryh/USTB-Awesome-JS
 // @namespace    https://chaoxing.com/
 // ==/UserScript==
 

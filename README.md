@@ -62,4 +62,4 @@ USTB Awesome JS Tools
 > 👉 [**在这里查看详细的图文教程**](docs/Installation.md)
 
 ## 许可证 <sub>Licensing</sub>
-本项目基于 **MIT 开源许可证**，详情参见 [License](https://github.com/isHarryh/USTB-OES-JS/blob/main/LICENSE) 页面。
+本项目基于 **MIT 开源许可证**，详情参见 [License](https://github.com/isHarryh/USTB-Awesome-JS/blob/main/LICENSE) 页面。

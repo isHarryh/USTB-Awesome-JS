@@ -1,4 +1,4 @@
-USTB-OES-JS 附加文档
+USTB-Awesome-JS 附加文档
 # 详细安装教程
 
 ## Edge 浏览器
