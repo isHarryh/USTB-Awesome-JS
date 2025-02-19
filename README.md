@@ -1,14 +1,16 @@
-USTB-OES-JS
+USTB-Awesome-JS
 ==========
-USTB Online Exercise Script  
-北京科技大学线上作业平台辅助脚本合集
+USTB Awesome JS Tools  
+北京科技大学线上平台辅助脚本合集
 
 <sup> This project only supports Chinese docs. If you are an English user, feel free to contact us. </sup>
 
 ## 介绍 <sub>Intro</sub>
-本项目包含了针对北京科技大学的各类线上作业平台而开发的浏览器脚本。目前支持的平台如下：
+
+本项目包含了针对北京科技大学的各类线上平台而开发的浏览器脚本。目前支持的平台如下：
 
 ### 锐格平台
+
 脚本文件 `USTB-RG-Helper.js` 是针对北京科技大学程序设计考试平台（简称锐格平台，内网访问 http://ucb.ustb.edu.cn ）的辅助工具，具有如下功能：
 
 1. 新增**显示参考答案**的功能。
@@ -30,6 +32,7 @@ USTB Online Exercise Script
 </details>
 
 ### 网易慕课
+
 脚本文件 `MOOC-Helper.js` 是针对中国大学 MOOC（简称网易慕课，公网访问 https://www.icourse163.org ）的辅助工具，具有如下功能：
 
 1. 提交至少一次课程测验后即可**在测验详情页面查看参考答案**，无需消耗所有测验次数后再查看。
@@ -42,15 +45,17 @@ USTB Online Exercise Script
 </details>
 
 ### 超星学习通
+
 脚本文件 `Chaoxing-Helper.js` 是针对超星学习通的辅助工具，具有如下功能：
 
 1. 在测验详情页面提供**紧凑视图**，以便复习和打印题目。
 
 ## 使用方法 <sub>Usage</sub>
+
 1. **在浏览器中安装脚本管理器插件。**  
    推荐的浏览器是 [Edge 浏览器](https://www.microsoft.com/zh-cn/edge/download) 或 [Chrome 浏览器](https://www.google.cn/chrome/index.html)。推荐的脚本管理器插件是 [TamperMonkey 篡改猴](https://www.tampermonkey.net/)。
 2. **在脚本管理器中添加脚本文件。**  
-   在本仓库中找到所需的 JS 脚本文件并下载，然后将其导入到脚本管理器（把文件内容复制到篡改猴的脚本编辑器里保存，或者直接导入整个文件）。
+   在本仓库的 `src` 文件夹中，找到所需的 JS 脚本文件并下载，然后将其导入到脚本管理器（把文件内容复制到篡改猴的脚本编辑器里保存，或者直接导入整个文件）。
 3. **打开对应的线上平台即可运行。**  
    如果网页已经打开，则需要刷新才能启动脚本。如果仍然无法生效，请在管理扩展的页面中勾选开发人员模式。
 
