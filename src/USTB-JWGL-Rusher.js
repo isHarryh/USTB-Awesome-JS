@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         USTB JWGL Rusher
-// @version      0.1
+// @version      0.2
 // @description  北京科技大学本科生抢课工具
 // @author       Harry Huang
 // @license      MIT
@@ -362,7 +362,33 @@
                 clearInterval(LoopRequester.loopId);
             }
 
-            // 启动新的循环链
+            // 定义响应处理函数
+            const onResponse = (raw) => {
+                if (!LoopRequester.session.meta) {
+                    return;
+                }
+                let rsp = JSON.parse(raw);
+                // 记录响应时间
+                LoopRequester.session.lastResponseAt = new Date();
+                // 更新历史记录
+                if (rsp.success === undefined && rsp.flag1 !== undefined) {
+                    rsp.message = "登录可能已失效，请重新进入";
+                }
+                if (rsp.message in LoopRequester.session.responseMap) {
+                    LoopRequester.session.responseMap[rsp.message] += 1;
+                } else {
+                    LoopRequester.session.responseMap[rsp.message] = 1;
+                }
+                // 检查是否有 success 字段且值为 true
+                if (rsp.success === true || rsp.success === '1' || rsp.success === 1) {
+                    LoopRequester.session.hasSuccess = true;
+                }
+            };
+
+            // 立即执行首次请求
+            $.get(url, params, onResponse);
+
+            // 启动循环链
             LoopRequester.loopId = setInterval(function() {
                 // 检查 meta 字段是否发生变化
                 if (
@@ -373,26 +399,8 @@
                     LoopRequester.stop(); // 如果 meta 变更，停止当前循环
                     return;
                 }
-
-                // 发送 GET 请求
-                $.get(url, params, function(raw) {
-                    if (!LoopRequester.session.meta) {
-                        return;
-                    }
-                    let rsp = JSON.parse(raw);
-                    // 记录响应时间
-                    LoopRequester.session.lastResponseAt = new Date();
-                    // 更新历史记录
-                    if (rsp.message in LoopRequester.session.responseMap) {
-                        LoopRequester.session.responseMap[rsp.message] += 1;
-                    } else {
-                        LoopRequester.session.responseMap[rsp.message] = 1;
-                    }
-                    // 检查是否有 success 字段且值为 true
-                    if (rsp.success === true || rsp.success === '1' || rsp.success === 1) {
-                        LoopRequester.session.hasSuccess = true;
-                    }
-                });
+                // 发送请求
+                $.get(url, params, onResponse);
             }, LoopRequester.interval);
         }
 
