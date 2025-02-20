@@ -18,7 +18,7 @@
     // Optimize webpage style
     GM_addStyle(`
 #jwgl-rusher {
-    width: 38.2%;
+    width: 40vw;
     display: flex;
     padding: 10px;
     position: absolute;
@@ -43,7 +43,7 @@
     width: 90%;
     max-height: 25vh;
     margin: 10px 0;
-    padding: 15px;
+    padding: 12.5px;
     background-color: #fff;
     border: 1px solid #bde;
     border-radius: 5px;
@@ -93,7 +93,7 @@
 
 #jwgl-rusher th,
 #jwgl-rusher td {
-    padding: 5px;
+    padding: 2.5px 5px;
     border: 1px solid #bde;
     text-align: center;
 }
@@ -107,9 +107,11 @@
 }
 
 #jwgl-rusher select {
+    width: 10em;
     padding: 5px;
     border: 1px solid #bde;
     border-radius: 5px;
+    cursor: pointer;
 }
 
 #jwgl-rusher ul {
@@ -126,15 +128,14 @@
     text-align: center;
     cursor: pointer;
     transition: background-color 0.2s ease;
-    z-index: 1;
 }
 
 #jwgl-rusher button:hover {
     background-color: #eee;
 }
 
-#jwgl-rusher button:disabled {
-    background-color: #ddd;
+#jwgl-rusher button:disabled,
+#jwgl-rusher select:disabled {
     cursor: not-allowed;
 }
 `);
@@ -191,7 +192,7 @@
         <h3>高级设置</h3>
         <div>
             <label for="qkFrequency">请求频率：</label>
-            <select id="qkFrequency">
+            <select class="qkSetting" id="qkFrequency">
                 <option value="100">每秒 10 次</option>
                 <option value="125">每秒 8 次</option>
                 <option value="167">每秒 6 次</option>
@@ -221,7 +222,7 @@
             });
             $('#qkStop').on('click', () => {
                 LoopRequester.stop();
-                $('#qkFrequency').prop('disabled', false);
+                $('.qkSetting').prop('disabled', false);
                 console.log("🚩 Stop loop request.");
             });
 
@@ -279,7 +280,7 @@
                             qzxkkz: "0",
                             glyxk: ""
                         };
-                        $('#qkFrequency').prop('disabled', true);
+                        $('.qkSetting').prop('disabled', true);
                         console.log("🚀 Start for loop request. Params:", real_params);
                         LoopRequester.start(apiXsxkOper, real_params);
                     });
@@ -330,7 +331,7 @@
             $latency.text(latencyText);
 
             // 显示响应历史记录
-            const $qkLog = $("#qkLog");
+            const $qkLog = $('#qkLog');
             $qkLog.empty();
             $.each(session.responseMap, function(message, count) {
                 const itemText = "收到 " + count + " 次： " + message;
