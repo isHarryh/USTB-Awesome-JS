@@ -167,11 +167,19 @@
     </div>
 
     <div class="component">
-        <h3>抢课状态</h3>
+        <h3>当前状态</h3>
+        <div>
+            <span>状态：</span>
+            <span id="qkStatus">--</span>
+            <button id="qkStop" style="float:right">停止</button>
+        </div>
+        <div>
+            <span>时钟：</span>
+            <span id="qkClock">--</span>
+        </div>
         <div>
             <span>延迟：</span>
             <span id="qkLatency">--</span>
-            <button id="qkStop" style="float:right">停止</button>
         </div>
         <div>
             <span>响应：</span>
@@ -180,18 +188,22 @@
     </div>
 
     <div class="component">
-        <h3>抢课设置</h3>
+        <h3>高级设置</h3>
         <div>
             <label for="qkFrequency">请求频率：</label>
             <select id="qkFrequency">
-                <option value="1000">每秒 1 次</option>
-                <option value="500">每秒 2 次</option>
-                <option value="333">每秒 3 次</option>
-                <option value="250">每秒 4 次</option>
-                <option value="200" selected>每秒 5 次</option>
-                <option value="167">每秒 6 次</option>
-                <option value="125">每秒 8 次</option>
                 <option value="100">每秒 10 次</option>
+                <option value="125">每秒 8 次</option>
+                <option value="167">每秒 6 次</option>
+                <option value="200" selected>每秒 5 次</option>
+                <option value="250">每秒 4 次</option>
+                <option value="333">每秒 3 次</option>
+                <option value="500">每秒 2 次</option>
+                <option value="1000">每秒 1 次</option>
+                <option value="5000">每 5 秒 1 次</option>
+                <option value="10000">每 10 秒 1 次</option>
+                <option value="30000">每 30 秒 1 次</option>
+                <option value="60000">每 60 秒 1 次</option>
             </select>
         </div>
     </div>
@@ -249,7 +261,7 @@
                 const $btn = $('<button></button>')
                     .text('抢课')
                     .on('click', () => {
-                        if (!confirm("是否确认开始抢课？")) {
+                        if (!confirm("是否确认开始抢课？目标：" + item.className)) {
                             return;
                         }
                         // 构造选课请求
@@ -265,7 +277,7 @@
                             opener: params.opener,
                             sfzybxk: params.sfzybxk,
                             qzxkkz: "0",
-                            glyxk: "0"
+                            glyxk: ""
                         };
                         $('#qkFrequency').prop('disabled', true);
                         console.log("🚀 Start for loop request. Params:", real_params);
@@ -278,31 +290,46 @@
         }
 
         static updateStatus(session) {
-            // 第一步：更新延迟状态
-            const $latency = $("#qkLatency");
-            const now = new Date().getTime();
-            // 若 lastResponseAt 不存在，则认为未收到响应
-            const last = session.lastResponseAt ? new Date(session.lastResponseAt).getTime() : 0;
-            const delay = now - last;
-
+            // 更新抢课状态
             let statusText = "";
-            if (!session.meta || last <= 0) {
-                statusText = "⚪--";
-            } else if (delay < 300) {
-                statusText = "🟢流畅";
-            } else if (delay < 600) {
-                statusText = "🟡一般";
-            } else if (delay < 900) {
-                statusText = "🟠缓慢";
-            } else {
-                statusText = "🔴阻滞";
-                if (delay < 999.9 * 1000) {
-                    statusText += "（无响应已持续 " + (delay / 1000).toFixed(1) + " 秒）";
+            if (session.meta && session.meta.url) {
+                if (session.hasSuccess) {
+                    statusText = "正在抢课（已成功）";
+                } else {
+                    statusText = "正在抢课";
                 }
+            } else {
+                statusText = "空闲中";
             }
-            $latency.text(statusText);
+            $('#qkStatus').text(statusText);
 
-            // 第二步：显示响应历史记录
+            // 更新本地时间显示
+            const now = new Date();
+            $('#qkClock').text(now.toLocaleTimeString('zh-CN', { hour12: false }));
+
+            // 更新延迟状态
+            const $latency = $("#qkLatency");
+            // 若 lastResponseAt 不存在，则认为未收到响应
+            const nowTime = now.getTime();
+            const lastTime = session.lastResponseAt ? new Date(session.lastResponseAt).getTime() : 0;
+            const delay = nowTime - lastTime;
+
+            let latencyText = "";
+            if (!session.meta || lastTime <= 0 || delay < 0) {
+                latencyText = "⚪ --";
+            } else if (delay < 400) {
+                latencyText = "🟢 流畅";
+            } else if (delay < 1000) {
+                latencyText = "🟡 一般";
+            } else {
+                latencyText = "🔴 阻滞";
+            }
+            if (delay >= 2000 && delay < 999.9 * 1000) {
+                latencyText += "（已有 " + (delay / 1000).toFixed(1) + " 秒未收到响应）";
+            }
+            $latency.text(latencyText);
+
+            // 显示响应历史记录
             const $qkLog = $("#qkLog");
             $qkLog.empty();
             $.each(session.responseMap, function(message, count) {
@@ -389,7 +416,7 @@
 
             // 定义响应处理函数
             const onResponse = (raw) => {
-                if (!LoopRequester.session.meta) {
+                if (LoopRequester.isStopped()) {
                     return;
                 }
                 let rsp = JSON.parse(raw);
@@ -417,7 +444,7 @@
             LoopRequester.loopId = setInterval(function() {
                 // 检查 meta 字段是否发生变化
                 if (
-                    !LoopRequester.session.meta ||
+                    LoopRequester.isStopped() ||
                     LoopRequester.session.meta.url !== url ||
                     JSON.stringify(LoopRequester.session.meta.params) !== JSON.stringify(params)
                 ) {
@@ -433,7 +460,10 @@
         static stop() {
             // 将类静态成员 session 重置
             LoopRequester.session = {
-                meta: null,
+                meta: {
+                    url: null,
+                    params: null
+                },
                 lastResponseAt: null,
                 responseMap: {},
                 hasSuccess: false
@@ -444,6 +474,10 @@
                 clearInterval(LoopRequester.loopId);
                 LoopRequester.loopId = null;
             }
+        }
+
+        static isStopped() {
+            return !LoopRequester.session.meta || !LoopRequester.session.meta.url;
         }
     }
 
