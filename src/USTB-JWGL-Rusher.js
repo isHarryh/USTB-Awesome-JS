@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         USTB JWGL Rusher
-// @version      0.2
+// @version      0.3
 // @description  北京科技大学本科生抢课工具
 // @author       Harry Huang
 // @license      MIT
@@ -183,6 +183,10 @@
             <span id="qkLatency">--</span>
         </div>
         <div>
+            <span>统计：</span>
+            <span id="qkStats">--</span>
+        </div>
+        <div>
             <span>响应：</span>
             <ul id="qkLog"></ul>
         </div>
@@ -207,6 +211,20 @@
                 <option value="60000">每 60 秒 1 次</option>
             </select>
         </div>
+        <div>
+            <label for="qkConcurrent">并发限制：</label>
+            <select class="qkSetting" id="qkConcurrent">
+                <option value="-1">无限制（慎用）</option>
+                <option value="50">50 个请求</option>
+                <option value="20">20 个请求</option>
+                <option value="10">10 个请求</option>
+                <option value="5" selected>5 个请求</option>
+                <option value="4">4 个请求</option>
+                <option value="3">3 个请求</option>
+                <option value="2">2 个请求</option>
+                <option value="1">1 个请求</option>
+            </select>
+        </div>
     </div>
 
     <p class="footer">Source: https://github.com/isHarryh/USTB-Awesome-JS</p>
@@ -219,6 +237,12 @@
                 var newInterval = parseInt($(this).val(), 10);
                 LoopRequester.interval = newInterval;
                 console.log("🆗 Set interval to " + newInterval + " ms.");
+            });
+            LoopRequester.concurrent = parseInt($('#qkConcurrent').val(), 10);
+            $('#qkConcurrent').on('change', function() {
+                var newConcurrent = parseInt($(this).val(), 10);
+                LoopRequester.concurrent = newConcurrent;
+                console.log("🆗 Set concurrent limit to " + newConcurrent);
             });
             $('#qkStop').on('click', () => {
                 LoopRequester.stop();
@@ -337,6 +361,15 @@
                 const itemText = "收到 " + count + " 次： " + message;
                 $("<li></li>").text(itemText).appendTo($qkLog);
             });
+
+            // 显示统计信息
+            const $qkStats = $('#qkStats');
+            $qkStats.text(
+                "发送 " + session.totalSend + "，" +
+                "接收 " + session.totalDone + "，" +
+                "丢失 " + session.totalFail + "，" +
+                "挂起 " + (session.totalSend - session.totalDone - session.totalFail)
+            );
         }
 
         static makeDraggable($ele, initX, initY) {
@@ -391,36 +424,44 @@
             },
             lastResponseAt: null, // 上次收到响应的时间
             responseMap: {}, // 响应的历史记录（响应的 message 字段=>出现的次数）
-            hasSuccess: false // 是否出现过 success 字段为真的响应
+            hasSuccess: false, // 是否出现过 success 字段为真的响应
+            totalSend: 0, // 发送计数
+            totalDone: 0, // 完成计数
+            totalFail: 0  // 失败计数
         }
 
         static interval = 200; // 两次请求的间隔（毫秒）
+        static concurrent = 5; // 同时挂起的请求的最大数量
         static loopId = null; // 用于存储当前的 setInterval ID
 
         // 启动请求循环
         static start(url, params) {
-            // 将类静态成员 session 重置
-            LoopRequester.session = {
-                meta: {
-                    url: url,
-                    params: params
-                },
-                lastResponseAt: null,
-                responseMap: {},
-                hasSuccess: false
-            };
-
             // 确保没有循环链正在运行
-            if (LoopRequester.loopId !== null) {
-                clearInterval(LoopRequester.loopId);
+            LoopRequester.stop();
+            LoopRequester.session.meta = {
+                url: url,
+                params: params
             }
 
-            // 定义响应处理函数
-            const onResponse = (raw) => {
-                if (LoopRequester.isStopped()) {
+            const onSend = () => {
+                if (LoopRequester.isTargetChanged(url, params)) {
                     return;
                 }
-                let rsp = JSON.parse(raw);
+                LoopRequester.session.totalSend += 1;
+            }
+
+            const onFail = () => {
+                if (LoopRequester.isTargetChanged(url, params)) {
+                    return;
+                }
+                LoopRequester.session.totalFail += 1;
+            }
+
+            const onResponse = (rsp) => {
+                if (LoopRequester.isTargetChanged(url, params)) {
+                    return;
+                }
+                LoopRequester.session.totalDone += 1;
                 // 记录响应时间
                 LoopRequester.session.lastResponseAt = new Date();
                 // 更新历史记录
@@ -433,27 +474,43 @@
                     LoopRequester.session.responseMap[rsp.message] = 1;
                 }
                 // 检查是否有 success 字段且值为 true
-                if (rsp.success === true || rsp.success === '1' || rsp.success === 1) {
+                if (rsp.message && rsp.message.indexOf("选课成功") > -1) {
                     LoopRequester.session.hasSuccess = true;
                 }
             };
 
             // 立即执行首次请求
-            $.get(url, params, onResponse);
+            $.ajax({
+                url: url,
+                data: params,
+                method: 'GET',
+                success: onResponse,
+                error: onFail,
+                beforeSend: onSend,
+                dataType: 'json'
+            });
 
             // 启动循环链
             LoopRequester.loopId = setInterval(function() {
                 // 检查 meta 字段是否发生变化
-                if (
-                    LoopRequester.isStopped() ||
-                    LoopRequester.session.meta.url !== url ||
-                    JSON.stringify(LoopRequester.session.meta.params) !== JSON.stringify(params)
-                ) {
-                    LoopRequester.stop(); // 如果 meta 变更，停止当前循环
+                if (LoopRequester.isTargetChanged(url, params)) {
+                    LoopRequester.stop(); // 如果 meta 变更，停止循环链
                     return;
                 }
+                // 检查是否超过最大挂起请求限制
+                if (LoopRequester.isExceededConcurrentLimit()) {
+                    return; // 跳过本次循环
+                }
                 // 发送请求
-                $.get(url, params, onResponse);
+                $.ajax({
+                    url: url,
+                    data: params,
+                    method: 'GET',
+                    success: onResponse,
+                    error: onFail,
+                    beforeSend: onSend,
+                    dataType: 'json'
+                });
             }, LoopRequester.interval);
         }
 
@@ -467,7 +524,10 @@
                 },
                 lastResponseAt: null,
                 responseMap: {},
-                hasSuccess: false
+                hasSuccess: false,
+                totalSend: 0,
+                totalDone: 0,
+                totalFail: 0
             };
 
             // 清除 setInterval
@@ -479,6 +539,20 @@
 
         static isStopped() {
             return !LoopRequester.session.meta || !LoopRequester.session.meta.url;
+        }
+
+        static isTargetChanged(url, params) {
+            return LoopRequester.isStopped() ||
+                LoopRequester.session.meta.url !== url ||
+                JSON.stringify(LoopRequester.session.meta.params) !== JSON.stringify(params);
+        }
+
+        static isExceededConcurrentLimit() {
+            if (LoopRequester.concurrent < 1) {
+                return false;
+            }
+            const s = JSON.parse(JSON.stringify(LoopRequester.session));
+            return s.totalSend - s.totalDone - s.totalFail >= LoopRequester.concurrent;
         }
     }
 
