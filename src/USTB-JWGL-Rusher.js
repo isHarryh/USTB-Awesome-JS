@@ -45,7 +45,7 @@
     margin: 10px 0;
     padding: 15px;
     background-color: #fff;
-    border: 1px solid #cef;
+    border: 1px solid #bde;
     border-radius: 5px;
     box-shadow: 2.5px 5px 5px 0 #0002;
     overflow: overlay;
@@ -58,6 +58,7 @@
     font-size: 1.4em;
     text-align: center;
     z-index: 1;
+    user-select: none;
 }
 
 #jwgl-rusher .component h3 {
@@ -75,6 +76,10 @@
     z-index: 1;
 }
 
+#jwgl-rusher .component>div {
+    margin-top: 5px;
+}
+
 #jwgl-rusher .tip {
     padding: 5px 0;
     color: #444;
@@ -89,7 +94,7 @@
 #jwgl-rusher th,
 #jwgl-rusher td {
     padding: 5px;
-    border: 1px solid #cef;
+    border: 1px solid #bde;
     text-align: center;
 }
 
@@ -103,7 +108,7 @@
 
 #jwgl-rusher select {
     padding: 5px;
-    border: 1px solid #cef;
+    border: 1px solid #bde;
     border-radius: 5px;
 }
 
@@ -111,6 +116,26 @@
     list-style-type: disc;
     margin-left: 20px;
     padding-left: 0;
+}
+
+#jwgl-rusher button {
+    padding: 5px 10px;
+    background-color: #fff;
+    border: 1px solid #bde;
+    border-radius: 5px;
+    text-align: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    z-index: 1;
+}
+
+#jwgl-rusher button:hover {
+    background-color: #eee;
+}
+
+#jwgl-rusher button:disabled {
+    background-color: #ddd;
+    cursor: not-allowed;
 }
 `);
 
@@ -148,7 +173,7 @@
             <span id="qkLatency">--</span>
             <button id="qkStop" style="float:right">停止</button>
         </div>
-        <div style="margin-top: 10px;">
+        <div>
             <span>响应：</span>
             <ul id="qkLog"></ul>
         </div>
@@ -506,7 +531,7 @@
     GUIPane.init();
     setInterval(() => {
         GUIPane.updateStatus(LoopRequester.session);
-    }, 100);
+    }, 150);
 
     console.log("USTB JWGL Rusher Start");
 
