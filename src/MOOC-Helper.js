@@ -397,7 +397,11 @@
                 aid: 0,
                 finalScore: modifiedScore,
                 score: modifiedScore,
-                submitTime: Date.now()
+                submitTime: TestListHijacker.calculateSubmitTime(
+                    data.deadline || Date.now(),
+                    1,
+                    'nighttime'
+                )
             }];
 
             // Replace effectScore
@@ -432,6 +436,49 @@
             }
 
             return modifiedScore;
+        }
+
+        static calculateSubmitTime(deadline, advanceDayCount, timeRange) {
+            // Convert deadline to Date if it's a timestamp
+            const deadlineDate = new Date(deadline);
+
+            // Calculate target date (advanceDayCount days before deadline)
+            const targetDate = new Date(deadlineDate);
+            targetDate.setDate(targetDate.getDate() - advanceDayCount);
+
+            // Use deadline as seeded random generator
+            let seed = deadline % 233280;
+            const seededRandom = () => {
+                seed = (seed * 9301 + 49297) % 233280;
+                return seed / 233280;
+            };
+
+            // Determine time range
+            let startHour = 0, endHour = 24;
+            switch (timeRange) {
+                case 'daytime':
+                    startHour = 6;
+                    endHour = 18;
+                    break;
+                case 'nighttime':
+                    startHour = 18;
+                    endHour = 24;
+                    break;
+                case 'alltime':
+                default:
+                    startHour = 0;
+                    endHour = 24;
+                    break;
+            }
+
+            // Random time within the range using seeded random
+            const randomHour = startHour + seededRandom() * (endHour - startHour);
+            const randomMinute = seededRandom() * 59.9;
+            const randomSecond = seededRandom() * 59.9;
+
+            targetDate.setHours(Math.floor(randomHour), Math.floor(randomMinute), Math.floor(randomSecond));
+
+            return targetDate.getTime(); // Return timestamp in milliseconds
         }
 
         static modifyTermData(data) {
