@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MOOC Helper
-// @version      0.5
+// @version      0.6
 // @description  中国大学MOOC慕课辅助脚本
 // @author       Harry Huang
 // @license      MIT
@@ -9,6 +9,8 @@
 // @grant        GM_addStyle
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js
 // @source       https://github.com/isHarryh/USTB-Awesome-JS
+// @downloadURL  https://github.com/isHarryh/USTB-Awesome-JS/raw/refs/heads/main/src/MOOC-Helper.js
+// @updateURL    https://github.com/isHarryh/USTB-Awesome-JS/raw/refs/heads/main/src/MOOC-Helper.js
 // @namespace    https://www.icourse163.org/
 // ==/UserScript==
 
@@ -295,6 +297,53 @@
         }
     }
 
+    class HomeworkBean {
+        static paper = {};
+
+        static updatePaper(data) {
+            // Extract data from JavaScript response using regex
+            const realNameMatch = data.match(/realName:\s*"((?:\\u[0-9a-fA-F]{4}|[^"])*)"/);
+            const nickNameMatch = data.match(/nickName:\s*"((?:\\u[0-9a-fA-F]{4}|[^"])*)"/);
+            const studentNumberMatch = data.match(/studentNumber:\s*"([^"]*)"/);
+
+            // Decode Unicode escape sequences
+            const decodeUnicode = (str) => {
+                return str.replace(/\\u([0-9a-fA-F]{4})/g, (match, code) => {
+                    return String.fromCharCode(parseInt(code, 16));
+                });
+            };
+
+            HomeworkBean.paper = {
+                realName: realNameMatch ? decodeUnicode(realNameMatch[1]) : null,
+                nickName: nickNameMatch ? decodeUnicode(nickNameMatch[1]) : null,
+                studentNumber: studentNumberMatch ? studentNumberMatch[1] : null
+            };
+            console.log(HomeworkBean.paper);
+        }
+
+        static showPaperInfo() {
+            const container = $('.j-evaluate-status-head');
+            if (container.length && HomeworkBean.paper.realName) {
+                const infoBox = $(`
+                    <div class="mghHomeworkInfo" style="margin-top: 10px; padding: 10px; background: #f3f5ff; border: 1px solid #bbc0f6; border-radius: 4px;">
+                        <p><b>学生信息：</b></p>
+                        ${HomeworkBean.paper.realName ? `<p>姓名：${HomeworkBean.paper.realName}</p>` : ''}
+                        ${HomeworkBean.paper.nickName ? `<p>昵称：${HomeworkBean.paper.nickName}</p>` : ''}
+                        ${HomeworkBean.paper.studentNumber ? `<p>学号：${HomeworkBean.paper.studentNumber}</p>` : ''}
+                    </div>
+                `);
+
+                const oldBox = container.find('.mghHomeworkInfo');
+                if (!oldBox.length || oldBox.html() !== infoBox.html()) {
+                    if (oldBox.length) {
+                        oldBox.remove();
+                    }
+                    container.append(infoBox);
+                }
+            }
+        }
+    }
+
     class XHRSpy {
         static listeners = [];
         static originalSend = XMLHttpRequest.prototype.send;
@@ -318,7 +367,9 @@
                         try {
                             json = JSON.parse(xhr.responseText);
                         } catch (err) {
-                            console.error("Response parsing failed", err);
+                            console.warn("Response is not JSON format, pass to handler directly");
+                            handler(xhr.responseText, url);
+                            return;
                         }
 
                         // JSON contents is { code: int, msg: str, result: obj }
@@ -344,8 +395,12 @@
     XHRSpy.add('/web/j/mocQuizRpcBean.getOpenQuizInfo.rpc', (data, url) => {
         QuizBean.updateInfo(data);
     });
+    XHRSpy.add('/dwr/call/plaincall/MocQuizBean.getHomeworkPaperDto.dwr', (data, url) => {
+        HomeworkBean.updatePaper(data);
+    });
 
     setInterval(() => {
+        HomeworkBean.showPaperInfo();
         QuizBean.showPaperAnswer();
         QuizBean.showQuizInfo();
     }, 500);
