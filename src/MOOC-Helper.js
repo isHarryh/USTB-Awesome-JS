@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MOOC Helper
-// @version      0.7
+// @version      0.8
 // @description  中国大学MOOC慕课辅助脚本
 // @author       Harry Huang
 // @license      MIT
@@ -54,6 +54,11 @@
 
         .m-quizScore .totalScore {
             margin: 10px 0 0 0 !important;
+        }
+
+        #j-activityBanner {
+            /* Remove banner ad */
+            display: none !important;
         }
     `);
 
@@ -282,6 +287,122 @@
                     container.append(infoBox);
                 }
             }
+        }
+    }
+
+    class ButtonRecorder {
+        static STORAGE_KEY = 'mooc_helper_button_recorder_last_id';
+        static POPOVER_CLASS = 'mghButtonRecorderPopover';
+
+        static init() {
+            $(document).on('mousedown', '.u-btn', (e) => {
+                const btn = $(e.currentTarget).closest('.u-btn');
+                if (!btn.length) return;
+
+                const id = btn.attr('id');
+                if (id && /^auto-id-\d+$/.test(id)) {
+                    ButtonRecorder.recordButtonId(id);
+                    console.log(`ButtonRecorder: Recorded button ID: ${id}`);
+                }
+            });
+        }
+
+        static recordButtonId(id) {
+            GM_setValue(ButtonRecorder.STORAGE_KEY, id);
+        }
+
+        static getRecordedId() {
+            return GM_getValue(ButtonRecorder.STORAGE_KEY, null);
+        }
+
+        static clearRecord() {
+            GM_setValue(ButtonRecorder.STORAGE_KEY, null);
+        }
+
+        static showLastVisitPopover() {
+            const recordedId = ButtonRecorder.getRecordedId();
+            if (!recordedId) return;
+
+            const element = $(`#${recordedId}`);
+            if (!element.length) return;
+
+            // Prevent duplicate popovers
+            if (element.find(`.${ButtonRecorder.POPOVER_CLASS}`).length) return;
+
+            const popover = $(`
+                <div class="${ButtonRecorder.POPOVER_CLASS}" style="
+                    position: absolute;
+                    right: 100%;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    background: #e9fef0;
+                    padding: 6px 12px;
+                    border-radius: 8px;
+                    white-space: nowrap;
+                    z-index: 9999;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    margin-right: 8px;
+                    border: 1px solid #c0f0da;
+                    display: flex;
+                    gap: 12px;
+                ">
+                    <div style="display: flex; flex-direction: column; gap: 1px;">
+                        <span style="font-size: 9px; color: #999;">MOOC Helper 提示</span>
+                        <span style="font-size: 13px; color: #666;">您上次访问</span>
+                    </div>
+                    <button style="
+                        background: none;
+                        border: none;
+                        color: #999;
+                        cursor: pointer;
+                        font-size: 13px;
+                        padding: 0;
+                        font-weight: bold;
+                        line-height: 1;
+                        flex-shrink: 0;
+                    ">✕</button>
+                </div>
+            `);
+
+            // Create triangle using CSS
+            const triangleStyle = `
+                .${ButtonRecorder.POPOVER_CLASS}::after {
+                    content: '';
+                    position: absolute;
+                    right: -6px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    width: 0;
+                    height: 0;
+                    border-left: 6px solid #c0f0da;
+                    border-top: 5px solid transparent;
+                    border-bottom: 5px solid transparent;
+                }
+            `;
+
+            // Add style if not already added
+            if (!$('#mghButtonRecorderPopoverStyle').length) {
+                $('head').append(`<style id="mghButtonRecorderPopoverStyle">${triangleStyle}</style>`);
+            }
+
+            // Close button event
+            popover.on('click', (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                popover.fadeOut(200, () => {
+                    popover.remove();
+                    ButtonRecorder.clearRecord();
+                });
+            });
+
+            // Ensure element has position context for absolute positioning
+            if (element.css('position') === 'static') {
+                element.css('position', 'relative');
+            }
+
+            popover.hide();
+            element.append(popover);
+            popover.fadeIn(200);
         }
     }
 
@@ -703,10 +824,12 @@
         QuizBean.showPaperAnswer();
         HomeworkBean.showPaperInfo();
         TestListHijacker.showTestListHijacker();
+        ButtonRecorder.showLastVisitPopover();
     }, 500);
 
-    // Initialize TestListHijacker options from storage
+    // Initialize helpers
     TestListHijacker.init();
+    ButtonRecorder.init();
 
     console.log("MOOC Helper Start");
 
